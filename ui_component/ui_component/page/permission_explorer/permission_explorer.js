@@ -626,7 +626,6 @@ let permission_explorer = Class.extend({
 			parent: tableMountEl,
 			columns: columns,
 			data: rules,
-			// report_name: `perm_explorer_${this.current_mode}`,
 			pagination: {
 				enabled: true,
 				pageSize: 100

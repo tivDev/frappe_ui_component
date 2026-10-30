@@ -617,7 +617,6 @@ let doctype_relationship = Class.extend({
 			parent: tableMountEl,
 			columns: columns,
 			data: data.relationships,
-			report_name: `doctype_relationship_${this.current_doctype}`,
 			doctype: this.current_doctype,
 			pagination: {
 				enabled: true,

@@ -605,7 +605,6 @@ let user_access_analyzer = Class.extend({
 			parent: tableMountEl,
 			columns: columns,
 			data: tableData,
-			report_name: `access_analysis_${doctype}`,
 			pagination: {
 				enabled: true,
 				pageSize: 50

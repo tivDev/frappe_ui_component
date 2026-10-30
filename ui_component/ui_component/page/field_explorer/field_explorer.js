@@ -587,7 +587,6 @@ let field_explorer = Class.extend({
 			parent: tableMountEl,
 			columns: columns,
 			data: fields_data,
-			// report_name: `field_explorer_${this.current_doctype}`,
 			doctype: this.current_doctype,
 			table_config: {
 				additional_settings: {
