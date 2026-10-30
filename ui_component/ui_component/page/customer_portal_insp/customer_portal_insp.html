@@ -1,0 +1,64 @@
+<div class="customer-portal-container">
+	<!-- Unified Card: Controls, Filters & Summary -->
+	<div class="portal-card">
+		<!-- Top Row: Title & Info -->
+		<div class="portal-top-row">
+			<div class="portal-top-title">
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+					<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+					<circle cx="9" cy="7" r="4"></circle>
+					<path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+					<path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+				</svg>
+				<span class="portal-title-text">{{ __("Customer Portal Hierarchy & Access Inspector") }}</span>
+			</div>
+			<div class="portal-note text-muted">
+				<i class="fa fa-info-circle mr-1 text-primary"></i>
+				{{ __("Grouped by Customer with expandable/collapsible portal users.") }}
+			</div>
+		</div>
+
+		<!-- Main Filters Row -->
+		<div class="portal-controls-row">
+			<div class="portal-inputs-group">
+				<div class="portal-input-wrapper cust-wrapper">
+					<!-- Customer Link Control -->
+				</div>
+				<div class="portal-input-wrapper user-wrapper">
+					<!-- User Link Control -->
+				</div>
+				<div class="portal-input-wrapper has-user-wrapper">
+					<!-- Has Portal User Filter (Has User / No Has User) -->
+				</div>
+			</div>
+			<div class="portal-actions-group">
+				<button type="button" class="btn btn-default btn-sm btn-clear-portal" title="{{ __("Clear Filters") }}">
+					<i class="fa fa-undo mr-1"></i> {{ __("Reset") }}
+				</button>
+			</div>
+		</div>
+
+		<!-- Summary Badges Row -->
+		<div class="portal-summary-row" style="display: none;">
+			<div class="portal-meta-badges">
+				<!-- Injected dynamically via JS -->
+			</div>
+		</div>
+	</div>
+
+	<!-- Main Table Mount Area -->
+	<div class="customer-portal-table-mount">
+		<div class="empty-state-loading text-center text-muted">
+			<i class="fa fa-users fa-3x mb-2 text-muted" style="opacity: 0.5;"></i>
+			<div>{{ __("Loading Customer Portal data...") }}</div>
+		</div>
+	</div>
+
+	<!-- Load More Footer Container -->
+	<div class="portal-load-more-wrapper text-center mt-3" style="display: none;">
+		<button type="button" class="btn btn-default btn-sm btn-load-more">
+			<i class="fa fa-angle-double-down mr-1"></i> {{ __("Load More Customers (+50)") }}
+		</button>
+	</div>
+</div>
+

@@ -68,8 +68,29 @@ def get_user_access_analysis(
 	has_delete_without_if_owner = any(p.get("delete") and not p.get("if_owner") for p in level0_perms)
 	has_delete_with_if_owner = any(p.get("delete") and p.get("if_owner") for p in level0_perms)
 
+	has_doctype_submit_rule = any(p.get("submit") for p in level0_perms)
+	has_submit_without_if_owner = any(p.get("submit") and not p.get("if_owner") for p in level0_perms)
+	has_submit_with_if_owner = any(p.get("submit") and p.get("if_owner") for p in level0_perms)
+
+	has_doctype_cancel_rule = any(p.get("cancel") for p in level0_perms)
+	has_cancel_without_if_owner = any(p.get("cancel") and not p.get("if_owner") for p in level0_perms)
+	has_cancel_with_if_owner = any(p.get("cancel") and p.get("if_owner") for p in level0_perms)
+
+	has_doctype_amend_rule = any(p.get("amend") for p in level0_perms)
+	has_amend_without_if_owner = any(p.get("amend") and not p.get("if_owner") for p in level0_perms)
+	has_amend_with_if_owner = any(p.get("amend") and p.get("if_owner") for p in level0_perms)
+
+	has_doctype_report_rule = any(p.get("report") for p in level0_perms)
+	has_report_without_if_owner = any(p.get("report") and not p.get("if_owner") for p in level0_perms)
+	has_report_with_if_owner = any(p.get("report") and p.get("if_owner") for p in level0_perms)
+
 	has_doctype_read_rule = bool(role_perms.get("read")) or has_role_read_rule
 	has_doctype_write_rule = bool(role_perms.get("write")) or has_role_write_rule
+	has_doctype_delete_rule = bool(role_perms.get("delete")) or has_doctype_delete_rule
+	has_doctype_submit_rule = bool(role_perms.get("submit")) or has_doctype_submit_rule
+	has_doctype_cancel_rule = bool(role_perms.get("cancel")) or has_doctype_cancel_rule
+	has_doctype_amend_rule = bool(role_perms.get("amend")) or has_doctype_amend_rule
+	has_doctype_report_rule = bool(role_perms.get("report")) or has_doctype_report_rule
 	has_if_owner_enabled = bool(role_perms.get("has_if_owner_enabled")) or any(p.get("if_owner") for p in level0_perms)
 
 	# User permissions for this user (restrictive links)
@@ -107,6 +128,11 @@ def get_user_access_analysis(
 					"has_read_rule": has_doctype_read_rule,
 					"has_write_rule": has_doctype_write_rule,
 					"has_delete_rule": has_doctype_delete_rule,
+					"has_submit_rule": has_doctype_submit_rule,
+					"has_cancel_rule": has_doctype_cancel_rule,
+					"has_amend_rule": has_doctype_amend_rule,
+					"has_report_rule": has_doctype_report_rule,
+					"has_if_owner_enabled": has_if_owner_enabled,
 				},
 				"records": [],
 				"message": _("Document {0} does not exist in {1}.").format(doc_name, doctype),
@@ -142,6 +168,11 @@ def get_user_access_analysis(
 				"has_read_rule": has_doctype_read_rule,
 				"has_write_rule": has_doctype_write_rule,
 				"has_delete_rule": has_doctype_delete_rule,
+				"has_submit_rule": has_doctype_submit_rule,
+				"has_cancel_rule": has_doctype_cancel_rule,
+				"has_amend_rule": has_doctype_amend_rule,
+				"has_report_rule": has_doctype_report_rule,
+				"has_if_owner_enabled": has_if_owner_enabled,
 			},
 			"records": [],
 		}
@@ -238,28 +269,109 @@ def get_user_access_analysis(
 			delete_status = "indeterminate"
 			delete_details = _("Delete check encountered an error: {0}").format(str(e))
 
-		# Other permissions
-		other_ops = {}
-		if meta.is_submittable:
-			try:
-				other_ops["submit"] = "allowed" if frappe.has_permission(doctype, ptype="submit", doc=doc, user=user) else "denied"
-			except Exception:
-				other_ops["submit"] = "indeterminate"
-
-			try:
-				other_ops["cancel"] = "allowed" if frappe.has_permission(doctype, ptype="cancel", doc=doc, user=user) else "denied"
-			except Exception:
-				other_ops["cancel"] = "indeterminate"
-
-			try:
-				other_ops["amend"] = "allowed" if frappe.has_permission(doctype, ptype="amend", doc=doc, user=user) else "denied"
-			except Exception:
-				other_ops["amend"] = "indeterminate"
+		# Submit access
+		can_submit = False
+		submit_status = "denied"
+		submit_details = ""
+		if not meta.is_submittable:
+			submit_status = "not_applicable"
+			submit_details = _("DocType is not submittable.")
 		else:
-			other_ops["submit"] = "not_applicable"
-			other_ops["cancel"] = "not_applicable"
-			other_ops["amend"] = "not_applicable"
+			try:
+				if not has_doctype_submit_rule:
+					can_submit = False
+					submit_status = "denied"
+					submit_details = _("Submit denied: User roles lack baseline Submit permission on {0}.").format(doctype)
+				elif not has_submit_without_if_owner and has_submit_with_if_owner and not is_owner:
+					can_submit = False
+					submit_status = "denied"
+					submit_details = _("Submit denied: Owner-only rule restricts submission to document owner.")
+				else:
+					can_submit = bool(frappe.has_permission(doctype, ptype="submit", doc=doc, user=user))
+					submit_status = "allowed" if can_submit else "denied"
+					submit_details = _("Submit permitted") if can_submit else _("Submit denied by permissions or controller rule.")
+			except Exception as e:
+				submit_status = "indeterminate"
+				submit_details = _("Submit check encountered an error: {0}").format(str(e))
 
+		# Cancel access
+		can_cancel = False
+		cancel_status = "denied"
+		cancel_details = ""
+		if not meta.is_submittable:
+			cancel_status = "not_applicable"
+			cancel_details = _("DocType is not submittable.")
+		else:
+			try:
+				if not has_doctype_cancel_rule:
+					can_cancel = False
+					cancel_status = "denied"
+					cancel_details = _("Cancel denied: User roles lack baseline Cancel permission on {0}.").format(doctype)
+				elif not has_cancel_without_if_owner and has_cancel_with_if_owner and not is_owner:
+					can_cancel = False
+					cancel_status = "denied"
+					cancel_details = _("Cancel denied: Owner-only rule restricts cancellation to document owner.")
+				else:
+					can_cancel = bool(frappe.has_permission(doctype, ptype="cancel", doc=doc, user=user))
+					cancel_status = "allowed" if can_cancel else "denied"
+					cancel_details = _("Cancel permitted") if can_cancel else _("Cancel denied by permissions or controller rule.")
+			except Exception as e:
+				cancel_status = "indeterminate"
+				cancel_details = _("Cancel check encountered an error: {0}").format(str(e))
+
+		# Amend access
+		can_amend = False
+		amend_status = "denied"
+		amend_details = ""
+		if not meta.is_submittable:
+			amend_status = "not_applicable"
+			amend_details = _("DocType is not submittable.")
+		else:
+			try:
+				if not has_doctype_amend_rule:
+					can_amend = False
+					amend_status = "denied"
+					amend_details = _("Amend denied: User roles lack baseline Amend permission on {0}.").format(doctype)
+				elif not has_amend_without_if_owner and has_amend_with_if_owner and not is_owner:
+					can_amend = False
+					amend_status = "denied"
+					amend_details = _("Amend denied: Owner-only rule restricts amending to document owner.")
+				else:
+					can_amend = bool(frappe.has_permission(doctype, ptype="amend", doc=doc, user=user))
+					amend_status = "allowed" if can_amend else "denied"
+					amend_details = _("Amend permitted") if can_amend else _("Amend denied by permissions or controller rule.")
+			except Exception as e:
+				amend_status = "indeterminate"
+				amend_details = _("Amend check encountered an error: {0}").format(str(e))
+
+		# Report access
+		can_report = False
+		report_status = "denied"
+		report_details = ""
+		try:
+			if not has_doctype_report_rule:
+				can_report = False
+				report_status = "denied"
+				report_details = _("Report access denied: User roles lack baseline Report permission on {0}.").format(doctype)
+			elif not has_report_without_if_owner and has_report_with_if_owner and not is_owner:
+				can_report = False
+				report_status = "denied"
+				report_details = _("Report denied: Owner-only rule restricts reporting to document owner.")
+			else:
+				can_report = bool(frappe.has_permission(doctype, ptype="report", doc=doc, user=user))
+				report_status = "allowed" if can_report else "denied"
+				report_details = _("Report access permitted") if can_report else _("Report access denied by permissions.")
+		except Exception as e:
+			report_status = "indeterminate"
+			report_details = _("Report check encountered an error: {0}").format(str(e))
+
+		# Other permissions
+		other_ops = {
+			"submit": submit_status,
+			"cancel": cancel_status,
+			"amend": amend_status,
+			"report": report_status,
+		}
 		try:
 			other_ops["share"] = "allowed" if frappe.has_permission(doctype, ptype="share", doc=doc, user=user) else "denied"
 		except Exception:
@@ -314,13 +426,24 @@ def get_user_access_analysis(
 			else:
 				causes.append(_("Delete access denied by permissions or controller rule."))
 
+		if meta.is_submittable:
+			if can_read and not can_submit and not has_doctype_submit_rule:
+				causes.append(_("Submit denied: User roles lack Submit permission on {0}.").format(doctype))
+			if can_read and not can_cancel and not has_doctype_cancel_rule:
+				causes.append(_("Cancel denied: User roles lack Cancel permission on {0}.").format(doctype))
+			if can_read and not can_amend and not has_doctype_amend_rule:
+				causes.append(_("Amend denied: User roles lack Amend permission on {0}.").format(doctype))
+
+		if can_read and not can_report and not has_doctype_report_rule:
+			causes.append(_("Report denied: User roles lack Report permission on {0}.").format(doctype))
+
 		diagnostic_text = " ".join(causes)
 
 		# Overall categorization
 		is_accessible = can_read or is_list_visible
 		if is_accessible:
 			accessible_count += 1
-		elif read_status == "indeterminate" or write_status == "indeterminate":
+		elif any(s == "indeterminate" for s in (read_status, write_status, delete_status, submit_status, cancel_status, amend_status, report_status)):
 			indeterminate_count += 1
 		else:
 			inaccessible_count += 1
@@ -336,6 +459,14 @@ def get_user_access_analysis(
 				op_status = write_status
 			elif op == "delete":
 				op_status = delete_status
+			elif op == "submit":
+				op_status = submit_status
+			elif op == "cancel":
+				op_status = cancel_status
+			elif op == "amend":
+				op_status = amend_status
+			elif op == "report":
+				op_status = report_status
 			elif op == "list":
 				op_status = "allowed" if is_list_visible else "denied"
 			elif op in other_ops:
@@ -354,7 +485,7 @@ def get_user_access_analysis(
 				include_record = False
 			elif target_stat == "denied" and is_accessible:
 				include_record = False
-			elif target_stat == "indeterminate" and (read_status != "indeterminate" and write_status != "indeterminate"):
+			elif target_stat == "indeterminate" and not any(s == "indeterminate" for s in (read_status, write_status, delete_status, submit_status, cancel_status, amend_status, report_status)):
 				include_record = False
 
 		if include_record:
@@ -377,6 +508,22 @@ def get_user_access_analysis(
 				"delete_access": {
 					"status": delete_status,
 					"details": delete_details or (_("Delete permitted") if can_delete else _("Delete denied")),
+				},
+				"submit_access": {
+					"status": submit_status,
+					"details": submit_details,
+				},
+				"cancel_access": {
+					"status": cancel_status,
+					"details": cancel_details,
+				},
+				"amend_access": {
+					"status": amend_status,
+					"details": amend_details,
+				},
+				"report_access": {
+					"status": report_status,
+					"details": report_details,
 				},
 				"other_permissions": other_ops,
 				"access_details": diagnostic_text,
@@ -403,6 +550,10 @@ def get_user_access_analysis(
 			"has_read_rule": has_doctype_read_rule,
 			"has_write_rule": has_doctype_write_rule,
 			"has_delete_rule": has_doctype_delete_rule,
+			"has_submit_rule": has_doctype_submit_rule,
+			"has_cancel_rule": has_doctype_cancel_rule,
+			"has_amend_rule": has_doctype_amend_rule,
+			"has_report_rule": has_doctype_report_rule,
 			"has_if_owner_enabled": has_if_owner_enabled,
 		},
 		"records": records,
