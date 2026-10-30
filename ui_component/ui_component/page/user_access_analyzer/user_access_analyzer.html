@@ -1,0 +1,551 @@
+<div class="user-access-analyzer-container">
+	<!-- Unified Card: Presets, Controls & Summary -->
+	<div class="analyzer-card">
+		<!-- Top Bar: Title & Quick Presets -->
+		<div class="analyzer-top-row">
+			<div class="analyzer-top-title">
+				<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+					<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+				</svg>
+				<span class="analyzer-title-text">{{ __("Evaluate Effective Document Access") }}</span>
+			</div>
+			<div class="analyzer-presets-group">
+				<span class="preset-label">{{ __("Quick Presets:") }}</span>
+				<div class="preset-buttons">
+					<!-- Injected dynamically via JS -->
+				</div>
+			</div>
+		</div>
+
+		<!-- Main Filters & Actions Row -->
+		<div class="analyzer-controls-row">
+			<div class="analyzer-inputs-group">
+				<div class="analyzer-input-wrapper user-wrapper">
+					<!-- User Link Control -->
+				</div>
+				<div class="analyzer-input-wrapper doctype-wrapper">
+					<!-- DocType Link Control -->
+				</div>
+				<div class="analyzer-input-wrapper docname-wrapper">
+					<!-- Document Name Dynamic Control -->
+				</div>
+				<div class="analyzer-input-wrapper type-wrapper">
+					<!-- Access Type Select -->
+				</div>
+				<div class="analyzer-input-wrapper status-wrapper">
+					<!-- Access Status Select -->
+				</div>
+			</div>
+			<div class="analyzer-actions-group">
+				<button type="button" class="btn btn-default btn-sm btn-clear-analysis" title="{{ __("Clear Filters") }}">
+					<i class="fa fa-undo mr-1"></i> {{ __("Reset") }}
+				</button>
+			</div>
+		</div>
+
+		<!-- Summary & Status Row -->
+		<div class="analyzer-summary-row" style="display: none;">
+			<div class="analyzer-meta-badges">
+				<!-- Injected dynamically -->
+			</div>
+			<div class="analyzer-legend">
+				<span class="legend-item"><span class="legend-dot allowed"></span> {{ __("Allowed") }}</span>
+				<span class="legend-item"><span class="legend-dot denied"></span> {{ __("Denied") }}</span>
+				<span class="legend-item"><span class="legend-dot indeterminate"></span> {{ __("Indeterminate") }}</span>
+			</div>
+		</div>
+	</div>
+
+	<!-- Main Table Mount Area -->
+	<div class="user-access-analyzer-table-mount">
+		<div class="empty-state-no-filter text-center text-muted">
+			{{ __("Please select a User and DocType to begin access analysis.") }}
+		</div>
+	</div>
+</div>
+
+<style>
+.user-access-analyzer-container {
+	padding-top: 4px;
+}
+
+/* Unified Card */
+.analyzer-card {
+	background: var(--card-bg, #ffffff);
+	border: 1px solid var(--border-color, #e2e8f0);
+	border-radius: 8px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+	margin-bottom: 16px;
+	transition: all 0.2s ease;
+}
+
+/* Top Row */
+.analyzer-top-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 12px;
+	padding: 9px 18px;
+	border-bottom: 1px solid var(--border-color, #f1f5f9);
+	background: #f8fafc;
+	border-top-left-radius: 8px;
+	border-top-right-radius: 8px;
+}
+
+.analyzer-top-title {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--text-color, #334155);
+}
+
+.analyzer-top-title svg {
+	color: var(--primary-color, #2563eb);
+}
+
+.analyzer-presets-group {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.preset-label {
+	font-size: 11.5px;
+	font-weight: 600;
+	color: var(--text-muted, #64748b);
+	text-transform: uppercase;
+	letter-spacing: 0.3px;
+	white-space: nowrap;
+}
+
+.preset-buttons {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex-wrap: wrap;
+}
+
+.preset-pill {
+	display: inline-flex;
+	align-items: center;
+	padding: 3px 10px;
+	font-size: 11.5px;
+	font-weight: 500;
+	border-radius: 6px;
+	background: #f1f5f9;
+	color: #334155;
+	border: 1px solid #cbd5e1;
+	cursor: pointer;
+	transition: all 0.15s ease;
+	user-select: none;
+}
+
+.preset-pill:hover {
+	background: #e2e8f0;
+	color: var(--text-color, #0f172a);
+	border-color: #cbd5e1;
+	transform: translateY(-1px);
+}
+
+.preset-pill.active {
+	background: #eff6ff;
+	color: #1d4ed8;
+	border-color: #93c5fd;
+	font-weight: 600;
+	box-shadow: 0 1px 2px rgba(29, 78, 216, 0.08);
+}
+
+/* Controls Filter Row */
+.analyzer-controls-row {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 14px;
+	padding: 12px 18px;
+}
+
+.analyzer-inputs-group {
+	display: flex;
+	align-items: flex-end;
+	gap: 12px;
+	flex-wrap: wrap;
+}
+
+.analyzer-input-wrapper {
+	width: 200px;
+}
+
+.analyzer-input-wrapper.user-wrapper {
+	width: 215px;
+}
+
+.analyzer-input-wrapper.doctype-wrapper {
+	width: 200px;
+}
+
+.analyzer-input-wrapper.docname-wrapper {
+	width: 210px;
+}
+
+.analyzer-input-wrapper.type-wrapper {
+	width: 140px;
+}
+
+.analyzer-input-wrapper.status-wrapper {
+	width: 135px;
+}
+
+.analyzer-input-wrapper .control-label {
+	font-size: 11.5px !important;
+	font-weight: 600 !important;
+	color: var(--text-muted, #64748b) !important;
+	margin-bottom: 5px !important;
+	text-transform: uppercase !important;
+	letter-spacing: 0.3px !important;
+	display: block !important;
+	line-height: 1.2 !important;
+}
+
+.analyzer-input-wrapper .control-label.reqd:after {
+	content: " *";
+	color: var(--red-500, #ef4444);
+	font-weight: bold;
+}
+
+.analyzer-input-wrapper .frappe-control {
+	margin-bottom: 0 !important;
+	width: 100% !important;
+	max-width: 100% !important;
+	flex: none !important;
+	padding: 0 !important;
+}
+
+.analyzer-input-wrapper .form-group {
+	margin-bottom: 0 !important;
+}
+
+.analyzer-input-wrapper .control-input-wrapper,
+.analyzer-input-wrapper .control-input {
+	width: 100% !important;
+	position: relative !important;
+}
+
+.analyzer-input-wrapper .link-field {
+	position: relative !important;
+	width: 100% !important;
+	display: block !important;
+}
+
+.analyzer-input-wrapper .awesomplete {
+	position: relative !important;
+	width: 100% !important;
+	display: block !important;
+}
+
+.user-access-analyzer-container .awesomplete > [role=listbox],
+.analyzer-input-wrapper .awesomplete > [role=listbox],
+.awesomplete > [role=listbox] {
+	z-index: 12 !important;
+}
+
+.analyzer-input-wrapper input.input-with-feedback,
+.analyzer-input-wrapper select.input-with-feedback {
+	height: 34px !important;
+	width: 100% !important;
+	font-size: 13px !important;
+	font-weight: 500 !important;
+	border-radius: 6px !important;
+	border: 1px solid var(--border-color, #cbd5e1) !important;
+	background: var(--control-bg, #ffffff) !important;
+	box-shadow: none !important;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.analyzer-input-wrapper input.input-with-feedback {
+	padding-right: 48px !important;
+}
+
+.analyzer-input-wrapper .link-btn {
+	position: absolute !important;
+	top: 50% !important;
+	right: 8px !important;
+	transform: translateY(-50%) !important;
+	display: none !important;
+	align-items: center !important;
+	gap: 4px !important;
+	background: transparent !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	border: none !important;
+	z-index: 3 !important;
+}
+
+.analyzer-input-wrapper .link-field.has-value .link-btn {
+	display: inline-flex !important;
+}
+
+.analyzer-input-wrapper .link-btn a {
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	padding: 2px !important;
+	color: var(--text-muted, #64748b) !important;
+	border-radius: 4px !important;
+	text-decoration: none !important;
+	line-height: 1 !important;
+	background: transparent !important;
+	border: none !important;
+	transition: color 0.15s ease, background-color 0.15s ease !important;
+}
+
+.analyzer-input-wrapper .link-btn a:hover {
+	color: var(--text-color, #0f172a) !important;
+	background-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+.analyzer-input-wrapper input:read-only {
+	background: #f8fafc !important;
+	color: #94a3b8 !important;
+	cursor: not-allowed;
+	border-style: dashed !important;
+}
+
+.analyzer-input-wrapper input.input-with-feedback:focus,
+.analyzer-input-wrapper select.input-with-feedback:focus {
+	border-color: var(--primary-color, #2563eb) !important;
+	box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15) !important;
+}
+
+.analyzer-actions-group {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-left: auto;
+	margin-bottom: 1px;
+}
+
+.analyzer-actions-group .btn {
+	height: 34px;
+	padding: 0 12px;
+	font-size: 12.5px;
+	font-weight: 500;
+	border-radius: 6px;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+/* Summary Row */
+.analyzer-summary-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 12px;
+	padding: 10px 18px;
+	background: var(--control-bg, #f8fafc);
+	border-top: 1px solid var(--border-color, #e2e8f0);
+	border-bottom-left-radius: 8px;
+	border-bottom-right-radius: 8px;
+	transition: all 0.2s ease;
+}
+
+.analyzer-meta-badges {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.badge-tag {
+	display: inline-flex;
+	align-items: center;
+	padding: 3px 9px;
+	border-radius: 6px;
+	font-size: 11.5px;
+	font-weight: 600;
+	line-height: 1.3;
+}
+
+.badge-tag-module {
+	background: #e0f2fe;
+	color: #0369a1;
+	border: 1px solid #bae6fd;
+}
+
+.badge-tag-total {
+	background: #f1f5f9;
+	color: #334155;
+	border: 1px solid #cbd5e1;
+}
+
+.badge-tag-desk-yes {
+	background: #dcfce7;
+	color: #15803d;
+	border: 1px solid #bbf7d0;
+}
+
+.badge-tag-desk-no {
+	background: #fee2e2;
+	color: #b91c1c;
+	border: 1px solid #fecaca;
+}
+
+.badge-tag-indeterminate {
+	background: #fef3c7;
+	color: #b45309;
+	border: 1px solid #fde68a;
+}
+
+.analyzer-legend {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	font-size: 11.5px;
+	color: var(--text-muted, #64748b);
+}
+
+.legend-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	font-weight: 500;
+}
+
+.legend-dot {
+	display: inline-block;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+}
+
+.legend-dot.allowed {
+	background: #16a34a;
+}
+
+.legend-dot.denied {
+	background: #dc2626;
+}
+
+.legend-dot.indeterminate {
+	background: #f59e0b;
+}
+
+/* Empty State */
+.empty-state-no-filter {
+	padding: 90px 20px;
+	font-size: 13.5px;
+	font-weight: 500;
+	color: var(--text-muted, #64748b);
+	background: var(--card-bg, #ffffff);
+	border: 1px dashed var(--border-color, #cbd5e1);
+	border-radius: 8px;
+	margin-top: 8px;
+}
+
+.empty-state {
+	padding: 80px 20px;
+	background: var(--card-bg, #ffffff);
+	border: 1px dashed var(--border-color, #cbd5e1);
+	border-radius: 8px;
+	margin-top: 8px;
+}
+
+.empty-state .null-state {
+	width: 72px;
+	height: 72px;
+	opacity: 0.65;
+	margin-bottom: 12px;
+}
+
+.empty-title {
+	font-size: 14px;
+	font-weight: 600;
+	color: var(--text-color, #334155);
+}
+
+/* Skeleton loader */
+.analyzer-skeleton-box {
+	height: 380px;
+	background: #f1f5f9;
+	border-radius: 8px;
+	animation: analyzer-skeleton-pulse 1.2s infinite ease-in-out;
+	border: 1px solid var(--border-color, #e2e8f0);
+}
+
+@keyframes analyzer-skeleton-pulse {
+	0% {
+		opacity: 0.55;
+	}
+	50% {
+		opacity: 0.95;
+	}
+	100% {
+		opacity: 0.55;
+	}
+}
+
+/* Dark theme overrides */
+[data-theme=dark] .analyzer-card {
+	background: var(--card-bg, #1e293b);
+	border-color: #334155;
+}
+
+[data-theme=dark] .analyzer-top-row {
+	background: #0f172a;
+	border-bottom-color: #334155;
+}
+
+[data-theme=dark] .analyzer-top-title {
+	color: #f1f5f9;
+}
+
+[data-theme=dark] .preset-pill {
+	background: #334155;
+	color: #cbd5e1;
+	border-color: #475569;
+}
+
+[data-theme=dark] .preset-pill.active {
+	background: #1e3a5f;
+	color: #93c5fd;
+	border-color: #3b82f6;
+}
+
+[data-theme=dark] .analyzer-summary-row {
+	background: #0f172a;
+	border-top-color: #334155;
+}
+
+[data-theme=dark] .badge-tag-total {
+	background: #334155;
+	color: #f1f5f9;
+	border-color: #475569;
+}
+
+[data-theme=dark] .analyzer-input-wrapper input:read-only {
+	background: #0f172a !important;
+	color: #64748b !important;
+}
+
+[data-theme=dark] .empty-state-no-filter,
+[data-theme=dark] .empty-state {
+	background: var(--card-bg, #1e293b);
+	border-color: #334155;
+}
+
+[data-theme=dark] .analyzer-skeleton-box {
+	background: #1e293b;
+	border-color: #334155;
+}
+
+[data-theme=dark] .analyzer-input-wrapper .link-btn a:hover {
+	color: #f1f5f9 !important;
+	background-color: rgba(255, 255, 255, 0.1) !important;
+}
+</style>

@@ -1,0 +1,6 @@
+.user-access-analyzer-container .awesomplete > [role=listbox],
+.analyzer-input-wrapper .awesomplete > [role=listbox],
+.awesomplete > [role=listbox] {
+	z-index: 12 !important;
+}
+

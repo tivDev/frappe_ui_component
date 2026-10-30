@@ -1,0 +1,337 @@
+/* ==========================================================================
+   EasySnackbar & Snackbar Component Styles
+   Supports both .easy-snackbar-* and .snackbar-* classes
+   ========================================================================== */
+
+:root {
+  --easy-sb-bg: #f4f5f8;
+  --easy-sb-card-bg: #ffffff;
+  --easy-sb-text: #1f2937;
+  --easy-sb-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  /* Toast item styling */
+  --easy-sb-item-bg: #1f2937;
+  --easy-sb-item-color: #f9fafb;
+  --easy-sb-border-radius: 10px;
+  --easy-sb-zindex: 99999;
+
+  /* Type Colors */
+  --easy-sb-success: #10b981;
+  --easy-sb-error: #ef4444;
+  --easy-sb-warning: #f59e0b;
+  --easy-sb-info: #3b82f6;
+  --easy-sb-default: #6366f1;
+}
+
+/* ==========================================================================
+   Snackbar Containers
+   ========================================================================== */
+.easy-snackbar-container,
+.snackbar-container {
+  position: fixed;
+  z-index: var(--easy-sb-zindex, 99999);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 380px;
+  width: calc(100% - 32px);
+  pointer-events: none;
+  box-sizing: border-box;
+
+  /* Bottom Positions */
+  &.bottom-center,
+  &.center-bottom {
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    align-items: center;
+  }
+
+  &.bottom-right,
+  &.right-bottom {
+    bottom: 24px;
+    right: 24px;
+    align-items: flex-end;
+  }
+
+  &.bottom-left,
+  &.left-bottom {
+    bottom: 24px;
+    left: 24px;
+    align-items: flex-start;
+  }
+
+  /* Top Positions */
+  &.top-center,
+  &.center-top {
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    align-items: center;
+  }
+
+  &.top-right,
+  &.right-top {
+    top: 24px;
+    right: 24px;
+    align-items: flex-end;
+  }
+
+  &.top-left,
+  &.left-top {
+    top: 24px;
+    left: 24px;
+    align-items: flex-start;
+  }
+}
+
+/* ==========================================================================
+   Snackbar Item
+   ========================================================================== */
+.easy-snackbar-item,
+.snackbar-item {
+  position: relative;
+  background-color: var(--easy-sb-item-bg, #1f2937);
+  color: var(--easy-sb-item-color, #f9fafb);
+  padding: 14px 16px;
+  border-radius: var(--easy-sb-border-radius, 10px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+  font-family: var(--easy-sb-font);
+  font-size: 14px;
+  line-height: 1.4;
+  pointer-events: auto;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  opacity: 0;
+  width: 100%;
+  box-sizing: border-box;
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Bottom entrances */
+  &.pos-bottom {
+    transform: translateY(24px);
+
+    &.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    &.is-hiding {
+      opacity: 0;
+      transform: translateY(24px) scale(0.95);
+    }
+  }
+
+  /* Top entrances */
+  &.pos-top {
+    transform: translateY(-24px);
+
+    &.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    &.is-hiding {
+      opacity: 0;
+      transform: translateY(-24px) scale(0.95);
+    }
+  }
+
+  /* Type Accents - Icons & Progress Bars */
+  &.type-success {
+    .easy-snackbar-icon,
+    .snackbar-icon {
+      color: var(--easy-sb-success, #10b981);
+    }
+    .easy-snackbar-progress,
+    .snackbar-progress {
+      background-color: var(--easy-sb-success, #10b981);
+    }
+  }
+
+  &.type-error {
+    .easy-snackbar-icon,
+    .snackbar-icon {
+      color: var(--easy-sb-error, #ef4444);
+    }
+    .easy-snackbar-progress,
+    .snackbar-progress {
+      background-color: var(--easy-sb-error, #ef4444);
+    }
+  }
+
+  &.type-warning {
+    .easy-snackbar-icon,
+    .snackbar-icon {
+      color: var(--easy-sb-warning, #f59e0b);
+    }
+    .easy-snackbar-progress,
+    .snackbar-progress {
+      background-color: var(--easy-sb-warning, #f59e0b);
+    }
+  }
+
+  &.type-info {
+    .easy-snackbar-icon,
+    .snackbar-icon {
+      color: var(--easy-sb-info, #3b82f6);
+    }
+    .easy-snackbar-progress,
+    .snackbar-progress {
+      background-color: var(--easy-sb-info, #3b82f6);
+    }
+  }
+
+  &.type-default {
+    .easy-snackbar-icon,
+    .snackbar-icon {
+      color: var(--easy-sb-default, #818cf8);
+    }
+    .easy-snackbar-progress,
+    .snackbar-progress {
+      background-color: var(--easy-sb-default, #6366f1);
+    }
+  }
+}
+
+/* ==========================================================================
+   Content Area
+   ========================================================================== */
+.easy-snackbar-content,
+.snackbar-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+
+.easy-snackbar-icon,
+.snackbar-icon {
+  font-size: 18px;
+  line-height: 1;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.easy-snackbar-message,
+.snackbar-message {
+  word-break: break-word;
+  color: inherit;
+}
+
+/* ==========================================================================
+   Actions
+   ========================================================================== */
+.easy-snackbar-actions,
+.snackbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.easy-snackbar-action-btn,
+.snackbar-action-btn {
+  background: none;
+  border: none;
+  color: #93c5fd;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  line-height: 1.2;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #bfdbfe;
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+.easy-snackbar-close-btn,
+.snackbar-close-btn {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 2px 6px;
+  line-height: 1;
+  border-radius: 4px;
+  transition: color 0.15s ease, background-color 0.15s ease;
+
+  &:hover {
+    color: #f3f4f6;
+    background: rgba(255, 255, 255, 0.12);
+  }
+}
+
+/* ==========================================================================
+   Progress Bar
+   ========================================================================== */
+.easy-snackbar-progress,
+.snackbar-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  width: 100%;
+  transform-origin: left;
+  transition: transform linear;
+}
+
+/* ==========================================================================
+   Mobile Responsive
+   ========================================================================== */
+@media (max-width: 480px) {
+  .easy-snackbar-container,
+  .snackbar-container {
+    width: calc(100% - 24px);
+    max-width: 100%;
+
+    &.bottom-center,
+    &.bottom-right,
+    &.bottom-left,
+    &.center-bottom,
+    &.right-bottom,
+    &.left-bottom {
+      left: 12px;
+      right: 12px;
+      bottom: 16px;
+      transform: none;
+      align-items: stretch;
+    }
+
+    &.top-center,
+    &.top-right,
+    &.top-left,
+    &.center-top,
+    &.right-top,
+    &.left-top {
+      left: 12px;
+      right: 12px;
+      top: 16px;
+      transform: none;
+      align-items: stretch;
+    }
+  }
+
+  .easy-snackbar-item,
+  .snackbar-item {
+    font-size: 13px;
+    padding: 12px 14px;
+  }
+}
+
