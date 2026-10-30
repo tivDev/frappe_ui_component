@@ -1,0 +1,74 @@
+<div class="method-explorer-container">
+	<!-- Unified Card: Controls, Filters & Summary -->
+	<div class="explorer-card">
+		<!-- Top Row: Title & Info -->
+		<div class="explorer-top-row">
+			<div class="explorer-top-title">
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+					<circle cx="11" cy="11" r="8"></circle>
+					<line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+				</svg>
+				<span class="explorer-title-text">{{ __("Method Origin & Implementation Explorer") }}</span>
+			</div>
+			<div class="explorer-note text-muted">
+				<i class="fa fa-info-circle mr-1 text-primary"></i>
+				{{ __("Discover origins, overrides, extensions, and references across Python and JavaScript.") }}
+			</div>
+		</div>
+
+		<!-- Main Controls Row -->
+		<div class="explorer-controls-row">
+			<div class="explorer-inputs-group">
+				<div class="explorer-input-wrapper method-wrapper">
+					<!-- Method / Function Name Control -->
+				</div>
+				<div class="explorer-input-wrapper language-wrapper">
+					<!-- Language Select Control (All / Python / JavaScript) -->
+				</div>
+				<div class="explorer-input-wrapper mode-wrapper">
+					<!-- Search Mode Control (Find Definition / Find References / Both) -->
+				</div>
+				<div class="explorer-input-wrapper app-wrapper">
+					<!-- App Filter Control -->
+				</div>
+				<div class="explorer-input-wrapper class-wrapper">
+					<!-- Class / Object Filter Control -->
+				</div>
+			</div>
+			<div class="explorer-actions-group">
+				<button type="button" class="btn btn-primary btn-sm btn-search-method" title="{{ __("Search Method Origins") }}">
+					<i class="fa fa-search mr-1"></i> {{ __("Search") }}
+				</button>
+				<button type="button" class="btn btn-default btn-sm btn-reset" title="{{ __("Reset All Filters") }}">
+					<i class="fa fa-undo mr-1"></i> {{ __("Reset") }}
+				</button>
+			</div>
+		</div>
+
+		<!-- Summary Badges Row -->
+		<div class="explorer-summary-row" style="display: none;">
+			<div class="explorer-meta-badges">
+				<!-- Injected dynamically via JS -->
+			</div>
+		</div>
+	</div>
+
+	<!-- Main Table Mount Area -->
+	<div class="method-explorer-table-mount">
+		<!-- Initial Empty State -->
+		<div class="explorer-empty-prompt text-center text-muted">
+			<div class="empty-icon-wrapper mb-3">
+				<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-muted" style="opacity: 0.5;">
+					<polyline points="16 18 22 12 16 6"></polyline>
+					<polyline points="8 6 2 12 8 18"></polyline>
+					<circle cx="12" cy="12" r="3"></circle>
+				</svg>
+			</div>
+			<h5 class="text-dark font-weight-bold mb-1">{{ __("Search a Method, Function, or Class") }}</h5>
+			<p class="text-muted font-size-sm mb-0">
+				{{ __("Enter a Method / Function name or a Class / Object name (e.g. validate, SalesInvoice, make_delivery_note) to inspect definitions, overrides, extensions, and references.") }}
+			</p>
+		</div>
+	</div>
+</div>
+
