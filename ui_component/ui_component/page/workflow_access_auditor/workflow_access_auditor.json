@@ -1,0 +1,19 @@
+{
+ "content": null,
+ "creation": "2026-10-30 13:26:26.412172",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2026-10-30 13:26:26.412172",
+ "modified_by": "Administrator",
+ "module": "UI Component",
+ "name": "workflow_access_auditor",
+ "owner": "Administrator",
+ "page_name": "workflow_access_auditor",
+ "roles": [],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 0,
+ "title": "Workflow Inspector"
+}

@@ -147,9 +147,12 @@ let user_access_analyzer = Class.extend({
 					{ label: __('All Operations'), value: 'All' },
 					{ label: __('Read Access'), value: 'read' },
 					{ label: __('Write Access'), value: 'write' },
-					{ label: __('Delete Access'), value: 'delete' },
-					{ label: __('List Visibility'), value: 'list' },
 					{ label: __('Submit Access'), value: 'submit' },
+					{ label: __('Cancel Access'), value: 'cancel' },
+					{ label: __('Amend Access'), value: 'amend' },
+					{ label: __('Delete Access'), value: 'delete' },
+					{ label: __('Report Access'), value: 'report' },
+					{ label: __('List Visibility'), value: 'list' },
 					{ label: __('Share Access'), value: 'share' }
 				],
 				default: 'All',
@@ -437,6 +440,9 @@ let user_access_analyzer = Class.extend({
 		if (m.module) {
 			$badges.append(`<span class="badge-tag badge-tag-module">${__('Module')}: ${m.module}</span>`);
 		}
+		if (m.is_submittable) {
+			$badges.append(`<span class="badge-tag badge-tag-module">${__('Submittable DocType')}</span>`);
+		}
 		if (m.has_read_rule) {
 			$badges.append(`<span class="badge-tag badge-tag-desk-yes">✓ ${__('Role Read Rule Active')}</span>`);
 		} else {
@@ -447,6 +453,20 @@ let user_access_analyzer = Class.extend({
 				$badges.append(`<span class="badge-tag badge-tag-desk-yes">✓ ${__('Role Delete Rule Active')}</span>`);
 			} else {
 				$badges.append(`<span class="badge-tag badge-tag-desk-no">✗ ${__('No Role Delete Rule')}</span>`);
+			}
+		}
+		if (m.is_submittable && m.has_submit_rule !== undefined) {
+			if (m.has_submit_rule) {
+				$badges.append(`<span class="badge-tag badge-tag-desk-yes">✓ ${__('Role Submit Rule Active')}</span>`);
+			} else {
+				$badges.append(`<span class="badge-tag badge-tag-desk-no">✗ ${__('No Role Submit Rule')}</span>`);
+			}
+		}
+		if (m.has_report_rule !== undefined) {
+			if (m.has_report_rule) {
+				$badges.append(`<span class="badge-tag badge-tag-desk-yes">✓ ${__('Role Report Rule Active')}</span>`);
+			} else {
+				$badges.append(`<span class="badge-tag badge-tag-desk-no">✗ ${__('No Role Report Rule')}</span>`);
 			}
 		}
 
@@ -477,8 +497,8 @@ let user_access_analyzer = Class.extend({
 		}
 
 		const formatBadge = (statusObj) => {
-			const st = (typeof statusObj === 'string' ? statusObj : statusObj?.status || '').toLowerCase();
-			if (st === 'allowed') {
+			const st = (typeof statusObj === 'string' ? statusObj : statusObj?.status || '').toLowerCase().trim();
+			if (st === 'allowed' || st === __('allowed').toLowerCase()) {
 				return {
 					styles: {
 						color: '#15803d',
@@ -486,7 +506,7 @@ let user_access_analyzer = Class.extend({
 						textAlign: 'center'
 					}
 				};
-			} else if (st === 'denied') {
+			} else if (st === 'denied' || st === __('denied').toLowerCase()) {
 				return {
 					styles: {
 						color: '#b91c1c',
@@ -494,11 +514,18 @@ let user_access_analyzer = Class.extend({
 						textAlign: 'center'
 					}
 				};
-			} else if (st === 'indeterminate') {
+			} else if (st === 'indeterminate' || st === __('indeterminate').toLowerCase()) {
 				return {
 					styles: {
 						color: '#b45309',
 						fontWeight: '600',
+						textAlign: 'center'
+					}
+				};
+			} else if (st === 'not_applicable' || st === 'n/a' || st === '-' || st === __('n/a').toLowerCase()) {
+				return {
+					styles: {
+						color: 'var(--text-muted, #94a3b8)',
 						textAlign: 'center'
 					}
 				};
@@ -517,14 +544,14 @@ let user_access_analyzer = Class.extend({
 				label: __('Document Name'),
 				fieldtype: 'Link',
 				options: doctype,
-				width: 190,
+				width: 180,
 				freeze: true
 			},
 			{
 				fieldname: 'list_status',
 				label: __('List Visibility'),
 				fieldtype: 'Data',
-				width: 120,
+				width: 110,
 				align: 'center',
 				cell_decorator: { body: formatBadge }
 			},
@@ -532,7 +559,7 @@ let user_access_analyzer = Class.extend({
 				fieldname: 'read_status',
 				label: __('Detail Read'),
 				fieldtype: 'Data',
-				width: 115,
+				width: 105,
 				align: 'center',
 				cell_decorator: { body: formatBadge }
 			},
@@ -540,7 +567,31 @@ let user_access_analyzer = Class.extend({
 				fieldname: 'write_status',
 				label: __('Write'),
 				fieldtype: 'Data',
-				width: 100,
+				width: 90,
+				align: 'center',
+				cell_decorator: { body: formatBadge }
+			},
+			{
+				fieldname: 'submit_status',
+				label: __('Submit'),
+				fieldtype: 'Data',
+				width: 90,
+				align: 'center',
+				cell_decorator: { body: formatBadge }
+			},
+			{
+				fieldname: 'cancel_status',
+				label: __('Cancel'),
+				fieldtype: 'Data',
+				width: 90,
+				align: 'center',
+				cell_decorator: { body: formatBadge }
+			},
+			{
+				fieldname: 'amend_status',
+				label: __('Amend'),
+				fieldtype: 'Data',
+				width: 90,
 				align: 'center',
 				cell_decorator: { body: formatBadge }
 			},
@@ -548,7 +599,15 @@ let user_access_analyzer = Class.extend({
 				fieldname: 'delete_status',
 				label: __('Delete'),
 				fieldtype: 'Data',
-				width: 100,
+				width: 90,
+				align: 'center',
+				cell_decorator: { body: formatBadge }
+			},
+			{
+				fieldname: 'report_status',
+				label: __('Report'),
+				fieldtype: 'Data',
+				width: 90,
 				align: 'center',
 				cell_decorator: { body: formatBadge }
 			},
@@ -557,7 +616,7 @@ let user_access_analyzer = Class.extend({
 				label: __('Owner'),
 				fieldtype: 'Link',
 				options: 'User',
-				width: 160,
+				width: 140,
 				cell_decorator: {
 					body(v, row) {
 						return {
@@ -587,13 +646,29 @@ let user_access_analyzer = Class.extend({
 			}
 		];
 
+		const isSubmittable = Boolean(this.current_data?.doctype_meta?.is_submittable);
+
+		const formatVal = (obj, canApply = true) => {
+			if (!canApply) return __('N/A');
+			const st = (typeof obj === 'string' ? obj : obj?.status || '').toLowerCase().trim();
+			if (st === 'allowed') return __('Allowed');
+			if (st === 'denied') return __('Denied');
+			if (st === 'indeterminate') return __('Indeterminate');
+			if (st === 'not_applicable') return __('N/A');
+			return '-';
+		};
+
 		const tableData = records.map((r) => {
 			return {
 				name: r.name,
-				list_status: r.list_visibility?.status === 'allowed' ? __('Allowed') : __('Denied'),
-				read_status: r.detail_read_access?.status === 'allowed' ? __('Allowed') : (r.detail_read_access?.status === 'indeterminate' ? __('Indeterminate') : __('Denied')),
-				write_status: r.write_access?.status === 'allowed' ? __('Allowed') : (r.write_access?.status === 'indeterminate' ? __('Indeterminate') : __('Denied')),
-				delete_status: r.delete_access?.status === 'allowed' ? __('Allowed') : (r.delete_access?.status === 'indeterminate' ? __('Indeterminate') : __('Denied')),
+				list_status: formatVal(r.list_visibility),
+				read_status: formatVal(r.detail_read_access),
+				write_status: formatVal(r.write_access),
+				submit_status: formatVal(r.submit_access || r.other_permissions?.submit, isSubmittable),
+				cancel_status: formatVal(r.cancel_access || r.other_permissions?.cancel, isSubmittable),
+				amend_status: formatVal(r.amend_access || r.other_permissions?.amend, isSubmittable),
+				delete_status: formatVal(r.delete_access),
+				report_status: formatVal(r.report_access || r.other_permissions?.report, true),
 				owner: r.owner || '',
 				is_owner: r.is_owner,
 				access_details: r.access_details || ''

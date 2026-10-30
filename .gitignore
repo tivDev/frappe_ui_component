@@ -3,6 +3,6 @@
 *.egg-info
 *.swp
 tags
-ditech_core/public/dist
+ui_component/public/dist
 node_modules
 __pycache__
