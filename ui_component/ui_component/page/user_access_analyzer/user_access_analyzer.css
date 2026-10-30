@@ -4,3 +4,7 @@
 	z-index: 12 !important;
 }
 
+.legend-dot.not-applicable {
+	background: #94a3b8;
+}
+

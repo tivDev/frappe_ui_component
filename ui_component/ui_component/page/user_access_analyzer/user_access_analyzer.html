@@ -52,6 +52,7 @@
 				<span class="legend-item"><span class="legend-dot allowed"></span> {{ __("Allowed") }}</span>
 				<span class="legend-item"><span class="legend-dot denied"></span> {{ __("Denied") }}</span>
 				<span class="legend-item"><span class="legend-dot indeterminate"></span> {{ __("Indeterminate") }}</span>
+				<span class="legend-item"><span class="legend-dot not-applicable"></span> {{ __("N/A") }}</span>
 			</div>
 		</div>
 	</div>
@@ -193,7 +194,7 @@
 }
 
 .analyzer-input-wrapper.type-wrapper {
-	width: 140px;
+	width: 155px;
 }
 
 .analyzer-input-wrapper.status-wrapper {
@@ -434,6 +435,10 @@
 
 .legend-dot.indeterminate {
 	background: #f59e0b;
+}
+
+.legend-dot.not-applicable {
+	background: #94a3b8;
 }
 
 /* Empty State */

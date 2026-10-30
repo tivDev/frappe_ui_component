@@ -1,0 +1,67 @@
+<div class="workflow-inspector-container">
+	<!-- Unified Card: Controls, Filters & Summary -->
+	<div class="inspector-card">
+		<!-- Top Bar: Title & Status Presets -->
+		<div class="inspector-top-row">
+			<div class="inspector-top-title">
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+					<rect x="3" y="3" width="7" height="7"></rect>
+					<rect x="14" y="3" width="7" height="7"></rect>
+					<rect x="14" y="14" width="7" height="7"></rect>
+					<rect x="3" y="14" width="7" height="7"></rect>
+				</svg>
+				<span class="inspector-title-text">{{ __("Workflow Hierarchy & Permission Inspector") }}</span>
+			</div>
+			<div class="inspector-presets-group">
+				<span class="preset-label">{{ __("Quick Filter:") }}</span>
+				<div class="preset-buttons">
+					<button class="preset-pill active" type="button" data-preset="all">{{ __("All Workflows") }}</button>
+					<button class="preset-pill" type="button" data-preset="active">{{ __("Active Only") }}</button>
+					<button class="preset-pill" type="button" data-preset="inactive">{{ __("Inactive") }}</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- Main Filters & Actions Row -->
+		<div class="inspector-controls-row">
+			<div class="inspector-inputs-group">
+				<div class="inspector-input-wrapper dt-wrapper">
+					<!-- DocType Link Control -->
+				</div>
+				<div class="inspector-input-wrapper role-wrapper">
+					<!-- Role Link Control -->
+				</div>
+				<div class="inspector-input-wrapper state-wrapper">
+					<!-- Workflow State Link Control -->
+				</div>
+			</div>
+			<div class="inspector-actions-group">
+				<button type="button" class="btn btn-default btn-sm btn-clear-inspector" title="{{ __("Clear Filters") }}">
+					<i class="fa fa-undo mr-1"></i> {{ __("Reset") }}
+				</button>
+			</div>
+		</div>
+
+		<!-- Summary Badges & Information Note -->
+		<div class="inspector-summary-row" style="display: none;">
+			<div class="inspector-meta-badges">
+				<!-- Injected dynamically via JS -->
+			</div>
+			<div class="inspector-legend">
+				<span class="legend-note text-muted">
+					<i class="fa fa-info-circle mr-1 text-primary"></i>
+					{{ __("Configured transitions. Actual user execution may be constrained by DocType role permissions and document conditions.") }}
+				</span>
+			</div>
+		</div>
+	</div>
+
+	<!-- Main Table Mount Area -->
+	<div class="workflow-inspector-table-mount">
+		<div class="empty-state-no-filter text-center text-muted">
+			<i class="fa fa-sitemap fa-3x mb-2 text-muted" style="opacity: 0.5;"></i>
+			<div>{{ __("Please select a DocType to inspect its workflow.") }}</div>
+		</div>
+	</div>
+</div>
+
