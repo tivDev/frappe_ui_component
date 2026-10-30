@@ -1,0 +1,19 @@
+{
+ "content": null,
+ "creation": "2026-10-29 11:11:17.784288",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2026-10-29 11:11:17.784288",
+ "modified_by": "Administrator",
+ "module": "UI Component",
+ "name": "user-access-analyzer",
+ "owner": "Administrator",
+ "page_name": "user-access-analyzer",
+ "roles": [],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 0,
+ "title": "User Access Analyzer"
+}

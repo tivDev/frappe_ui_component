@@ -1,0 +1,19 @@
+{
+ "content": null,
+ "creation": "2026-10-29 10:14:08.421754",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2026-10-29 10:14:08.421754",
+ "modified_by": "Administrator",
+ "module": "UI Component",
+ "name": "permission-explorer",
+ "owner": "Administrator",
+ "page_name": "permission-explorer",
+ "roles": [],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 0,
+ "title": "Permission Explorer"
+}

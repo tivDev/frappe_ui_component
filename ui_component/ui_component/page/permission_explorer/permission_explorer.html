@@ -1,0 +1,532 @@
+<div class="permission-explorer-container" id="permissionExplorerContainer">
+	<!-- Unified Card: Mode Tabs, Controls & Presets -->
+	<div class="perm-card">
+		<!-- Top Mode Tabs Row -->
+		<div class="perm-mode-row">
+			<div class="perm-mode-tabs">
+				<button type="button" class="perm-mode-btn active" data-mode="doctype">
+					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+						<polyline points="14 2 14 8 20 8"></polyline>
+					</svg>
+					<span>{{ __("By DocType") }}</span>
+				</button>
+				<button type="button" class="perm-mode-btn" data-mode="role">
+					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+						<circle cx="9" cy="7" r="4"></circle>
+						<path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+						<path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+					</svg>
+					<span>{{ __("By Role") }}</span>
+				</button>
+				<button type="button" class="perm-mode-btn" data-mode="user">
+					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+						<circle cx="12" cy="7" r="4"></circle>
+					</svg>
+					<span>{{ __("By User") }}</span>
+				</button>
+			</div>
+
+			<!-- Right: Quick Presets -->
+			<div class="perm-presets-group">
+				<span class="preset-label">{{ __("Quick Presets:") }}</span>
+				<div class="preset-buttons"></div>
+			</div>
+		</div>
+
+		<!-- Controls Filter Row -->
+		<div class="perm-controls-row">
+			<div class="perm-inputs-group">
+				<!-- DocType Selector Mount -->
+				<div class="perm-input-wrapper" id="doctypeMountWrapper">
+					<div id="permDocTypeMount"></div>
+				</div>
+
+				<!-- Role Selector Mount -->
+				<div class="perm-input-wrapper" id="roleMountWrapper" style="display: none;">
+					<div id="permRoleMount"></div>
+				</div>
+
+				<!-- User Selector Mount -->
+				<div class="perm-input-wrapper" id="userMountWrapper" style="display: none;">
+					<div id="permUserMount"></div>
+				</div>
+
+				<!-- Perm Level Filter Mount -->
+				<div class="perm-input-wrapper permlevel-wrapper">
+					<div id="permLevelMount"></div>
+				</div>
+			</div>
+
+			<!-- Sub-view Navigation (e.g. Rules vs Fields by Permlevel) -->
+			<div class="perm-subviews-group" style="display: none;">
+				<div class="btn-group btn-group-sm" role="group">
+					<button type="button" class="btn btn-default active" data-subview="rules">{{ __("Permission Rules") }}</button>
+					<button type="button" class="btn btn-default" data-subview="fields">{{ __("Field Permlevels") }}</button>
+					<button type="button" class="btn btn-default" data-subview="user-perms" style="display: none;">{{ __("User Permissions") }}</button>
+					<button type="button" class="btn btn-default" data-subview="shares" style="display: none;">{{ __("Shared Records") }}</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- Bottom Summary Badges Row (Visible when data loaded) -->
+		<div class="perm-summary-row" style="display: none;">
+			<div class="summary-left">
+				<div class="perm-meta-badges"></div>
+			</div>
+			<div class="summary-right">
+				<div class="perm-legend">
+					<span class="legend-item"><span class="badge-crud badge-read">R</span> {{ __("Read") }}</span>
+					<span class="legend-item"><span class="badge-crud badge-write">W</span> {{ __("Write") }}</span>
+					<span class="legend-item"><span class="badge-crud badge-create">C</span> {{ __("Create") }}</span>
+					<span class="legend-item"><span class="badge-crud badge-delete">D</span> {{ __("Delete") }}</span>
+					<span class="legend-item"><span class="badge-crud badge-submit">S</span> {{ __("Submit") }}</span>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Table Mount Container -->
+	<div class="permission-explorer-table-mount">
+		<div class="empty-state-no-filter text-center text-muted">
+			{{ __("Please set filters") }}
+		</div>
+	</div>
+</div>
+
+<style>
+.permission-explorer-container {
+	padding-top: 4px;
+}
+
+/* Unified Card */
+.perm-card {
+	background: var(--card-bg, #ffffff);
+	border: 1px solid var(--border-color, #e2e8f0);
+	border-radius: 8px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+	margin-bottom: 16px;
+	transition: all 0.2s ease;
+}
+
+/* Mode Switcher Row */
+.perm-mode-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 12px;
+	padding: 10px 18px;
+	border-bottom: 1px solid var(--border-color, #f1f5f9);
+	background: #f8fafc;
+	border-top-left-radius: 8px;
+	border-top-right-radius: 8px;
+}
+
+.perm-mode-tabs {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.perm-mode-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 5px 12px;
+	font-size: 12.5px;
+	font-weight: 500;
+	border-radius: 6px;
+	background: transparent;
+	color: var(--text-muted, #64748b);
+	border: 1px solid transparent;
+	cursor: pointer;
+	transition: all 0.15s ease;
+	user-select: none;
+}
+
+.perm-mode-btn:hover {
+	color: var(--text-color, #0f172a);
+	background: rgba(0, 0, 0, 0.04);
+}
+
+.perm-mode-btn.active {
+	background: var(--card-bg, #ffffff);
+	color: var(--primary-color, #2563eb);
+	border-color: #cbd5e1;
+	font-weight: 600;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Presets Group */
+.perm-presets-group {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.preset-label {
+	font-size: 11.5px;
+	font-weight: 600;
+	color: var(--text-muted, #64748b);
+	text-transform: uppercase;
+	letter-spacing: 0.3px;
+	white-space: nowrap;
+}
+
+.preset-buttons {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex-wrap: wrap;
+}
+
+.preset-pill {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 3px 10px;
+	font-size: 12px;
+	font-weight: 500;
+	border-radius: 9999px;
+	background: var(--btn-default-bg, #f1f5f9);
+	color: var(--text-color, #475569);
+	border: 1px solid var(--border-color, #e2e8f0);
+	cursor: pointer;
+	line-height: 1.4;
+	transition: all 0.15s ease;
+	user-select: none;
+}
+
+.preset-pill:hover {
+	background: #e2e8f0;
+	color: var(--text-color, #0f172a);
+	border-color: #cbd5e1;
+	transform: translateY(-1px);
+}
+
+.preset-pill.active {
+	background: #eff6ff;
+	color: #1d4ed8;
+	border-color: #93c5fd;
+	font-weight: 600;
+	box-shadow: 0 1px 2px rgba(29, 78, 216, 0.08);
+}
+
+/* Controls Filter Row */
+.perm-controls-row {
+	display: flex;
+	align-items: flex-end;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 16px;
+	padding: 12px 18px;
+}
+
+.perm-inputs-group {
+	display: flex;
+	align-items: flex-end;
+	gap: 16px;
+	flex-wrap: wrap;
+}
+
+.perm-subviews-group {
+	margin-bottom: 1px;
+}
+
+.perm-input-wrapper {
+	width: 270px;
+}
+
+.perm-input-wrapper.permlevel-wrapper {
+	width: 140px;
+}
+
+.perm-input-wrapper .control-label {
+	font-size: 11.5px !important;
+	font-weight: 600 !important;
+	color: var(--text-muted, #64748b) !important;
+	margin-bottom: 5px !important;
+	text-transform: uppercase !important;
+	letter-spacing: 0.3px !important;
+	display: block !important;
+	line-height: 1.2 !important;
+}
+
+.perm-input-wrapper .control-label.reqd:after {
+	content: " *";
+	color: var(--red-500, #ef4444);
+	font-weight: bold;
+}
+
+.perm-input-wrapper .frappe-control {
+	margin-bottom: 0 !important;
+	width: 100% !important;
+	max-width: 100% !important;
+	flex: none !important;
+	padding: 0 !important;
+}
+
+.perm-input-wrapper .form-group {
+	margin-bottom: 0 !important;
+}
+
+.perm-input-wrapper .control-input-wrapper,
+.perm-input-wrapper .control-input {
+	width: 100% !important;
+	position: relative !important;
+}
+
+.perm-input-wrapper .link-field {
+	position: relative !important;
+	width: 100% !important;
+	display: block !important;
+}
+
+.perm-input-wrapper .awesomplete {
+	position: relative !important;
+	width: 100% !important;
+	display: block !important;
+}
+
+.permission-explorer-container .awesomplete > [role=listbox],
+.perm-input-wrapper .awesomplete > [role=listbox],
+.awesomplete > [role=listbox] {
+	z-index: 12 !important;
+}
+
+.perm-input-wrapper input.input-with-feedback,
+.perm-input-wrapper select.input-with-feedback {
+	height: 34px !important;
+	width: 100% !important;
+	font-size: 13px !important;
+	font-weight: 500 !important;
+	border-radius: 6px !important;
+	border: 1px solid var(--border-color, #cbd5e1) !important;
+	background: var(--control-bg, #ffffff) !important;
+	box-shadow: none !important;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.perm-input-wrapper input.input-with-feedback {
+	padding-right: 48px !important;
+}
+
+.perm-input-wrapper input.input-with-feedback:focus,
+.perm-input-wrapper select.input-with-feedback:focus {
+	border-color: var(--primary-color, #2563eb) !important;
+	box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15) !important;
+}
+
+.perm-input-wrapper .link-btn {
+	position: absolute !important;
+	top: 50% !important;
+	right: 8px !important;
+	transform: translateY(-50%) !important;
+	display: none !important;
+	align-items: center !important;
+	gap: 4px !important;
+	background: transparent !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	border: none !important;
+	z-index: 3 !important;
+}
+
+.perm-input-wrapper .link-field.has-value .link-btn {
+	display: inline-flex !important;
+}
+
+.perm-input-wrapper .link-btn a {
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	padding: 2px !important;
+	color: var(--text-muted, #64748b) !important;
+	border-radius: 4px !important;
+	text-decoration: none !important;
+	line-height: 1 !important;
+	background: transparent !important;
+	border: none !important;
+	transition: color 0.15s ease, background-color 0.15s ease !important;
+}
+
+.perm-input-wrapper .link-btn a:hover {
+	color: var(--text-color, #0f172a) !important;
+	background-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+[data-theme="dark"] .perm-input-wrapper .link-btn a:hover,
+body.theme-dark .perm-input-wrapper .link-btn a:hover {
+	color: #f1f5f9 !important;
+	background-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Summary Badges Row */
+.perm-summary-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 12px;
+	padding: 10px 18px;
+	background: var(--control-bg, #f8fafc);
+	border-top: 1px solid var(--border-color, #e2e8f0);
+	border-bottom-left-radius: 8px;
+	border-bottom-right-radius: 8px;
+	transition: all 0.2s ease;
+}
+
+.perm-meta-badges {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.badge-tag {
+	display: inline-flex;
+	align-items: center;
+	padding: 3px 9px;
+	border-radius: 6px;
+	font-size: 11.5px;
+	font-weight: 600;
+	line-height: 1.3;
+}
+
+.badge-tag-module {
+	background: #e0f2fe;
+	color: #0369a1;
+	border: 1px solid #bae6fd;
+}
+
+.badge-tag-total {
+	background: #f1f5f9;
+	color: #334155;
+	border: 1px solid #cbd5e1;
+}
+
+.badge-tag-custom {
+	background: #fef3c7;
+	color: #b45309;
+	border: 1px solid #fde68a;
+}
+
+.badge-tag-standard {
+	background: #dcfce7;
+	color: #15803d;
+	border: 1px solid #bbf7d0;
+}
+
+.badge-tag-desk-yes {
+	background: #dcfce7;
+	color: #15803d;
+	border: 1px solid #bbf7d0;
+}
+
+.badge-tag-desk-no {
+	background: #fee2e2;
+	color: #b91c1c;
+	border: 1px solid #fecaca;
+}
+
+.perm-legend {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 12px;
+	color: var(--text-muted, #64748b);
+}
+
+.legend-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.badge-crud {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 17px;
+	height: 17px;
+	border-radius: 3px;
+	font-size: 10px;
+	font-weight: 700;
+	line-height: 1;
+}
+
+.badge-read { background: #dbeafe; color: #1d4ed8; }
+.badge-write { background: #dcfce7; color: #15803d; }
+.badge-create { background: #e0e7ff; color: #4338ca; }
+.badge-delete { background: #fee2e2; color: #b91c1c; }
+.badge-submit { background: #fae8ff; color: #a21caf; }
+
+/* Empty State (No filter set) */
+.empty-state-no-filter {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 380px;
+	color: var(--text-muted, #8d99a6);
+	font-size: 13px;
+	font-weight: 400;
+}
+
+/* Empty State (Filtered with no records) */
+.empty-state {
+	padding: 60px 20px;
+	background: var(--card-bg, #ffffff);
+	border: 1px dashed var(--border-color, #cbd5e1);
+	border-radius: 8px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	min-height: 280px;
+}
+
+.empty-icon {
+	margin-bottom: 8px;
+}
+
+.empty-icon .null-state {
+	height: 60px;
+	width: auto;
+	display: inline-block;
+}
+
+.empty-title {
+	font-size: 13.5px;
+	font-weight: 400;
+	color: var(--text-muted, #64748b);
+	margin: 0;
+}
+
+/* Skeleton Loading Box */
+.perm-skeleton-box {
+	width: 100%;
+	height: 380px;
+	border-radius: 8px;
+	border: 1px solid var(--border-color, #e2e8f0);
+	background: linear-gradient(90deg, #f8fafc 25%, #e2e8f0 50%, #f8fafc 75%);
+	background-size: 200% 100%;
+	animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+[data-theme="dark"] .perm-skeleton-box,
+body.theme-dark .perm-skeleton-box {
+	background: linear-gradient(90deg, #1e293b 25%, #334155 50%, #1e293b 75%);
+	background-size: 200% 100%;
+	border-color: #334155;
+}
+
+@keyframes skeleton-pulse {
+	0% { background-position: 200% 0; }
+	100% { background-position: -200% 0; }
+}
+</style>
+

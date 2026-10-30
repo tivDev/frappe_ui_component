@@ -1,0 +1,6 @@
+.permission-explorer-container .awesomplete > [role=listbox],
+.perm-input-wrapper .awesomplete > [role=listbox],
+.awesomplete > [role=listbox] {
+	z-index: 12 !important;
+}
+
