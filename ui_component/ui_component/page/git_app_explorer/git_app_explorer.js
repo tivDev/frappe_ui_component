@@ -256,7 +256,7 @@ let GitAppExplorer = Class.extend({
 					`;
 				}
 				remote_html = `
-					<div class="remote-box">
+					<div class="remote-box" data-value="${frappe.utils.escape_html(app.remote_url)}" title="${frappe.utils.escape_html(app.remote_url)}">
 						<span class="remote-url-text" title="${frappe.utils.escape_html(app.remote_url)}">
 							${frappe.utils.escape_html(app.remote_url)}
 						</span>
@@ -368,11 +368,16 @@ let GitAppExplorer = Class.extend({
 					width: 170,
 					freeze: true,
 					cell_decorator: {
-						body() {
+						body(value, row) {
+							const app_name = (row && (row.app_name || (row.raw_app && row.raw_app.app_name))) || '';
 							return {
 								styles: {
 									fontWeight: '600',
 									color: 'var(--text-color, #0f172a)'
+								},
+								attributes: {
+									'data-value': app_name,
+									'title': app_name
 								}
 							};
 						}
@@ -382,13 +387,35 @@ let GitAppExplorer = Class.extend({
 					fieldname: 'app_title',
 					label: __('Title / Version'),
 					fieldtype: 'HTML',
-					width: 160
+					width: 160,
+					cell_decorator: {
+						body(value, row) {
+							const title = (row && row.raw_app && (row.raw_app.app_title || row.raw_app.app_name)) || '';
+							return {
+								attributes: {
+									'data-value': title,
+									'title': title
+								}
+							};
+						}
+					}
 				},
 				{
 					fieldname: 'branch_display',
 					label: __('Current Branch'),
 					fieldtype: 'HTML',
-					width: 150
+					width: 150,
+					cell_decorator: {
+						body(value, row) {
+							const branch = (row && row.raw_app && row.raw_app.branch) || '';
+							return {
+								attributes: {
+									'data-value': branch,
+									'title': branch
+								}
+							};
+						}
+					}
 				},
 				{
 					fieldname: 'remote_display',
@@ -396,10 +423,15 @@ let GitAppExplorer = Class.extend({
 					fieldtype: 'HTML',
 					width: 320,
 					cell_decorator: {
-						body() {
+						body(value, row) {
+							const git_url = (row && row.raw_app && row.raw_app.remote_url) || (row && row.remote_url) || '';
 							return {
 								styles: {
 									width: '100%'
+								},
+								attributes: {
+									'data-value': git_url,
+									'title': git_url
 								}
 							};
 						}
@@ -409,21 +441,54 @@ let GitAppExplorer = Class.extend({
 					fieldname: 'commit_display',
 					label: __('Latest Commit'),
 					fieldtype: 'HTML',
-					width: 280
+					width: 280,
+					cell_decorator: {
+						body(value, row) {
+							const commit_msg = (row && row.raw_app && row.raw_app.latest_commit && row.raw_app.latest_commit.message) || '';
+							return {
+								attributes: {
+									'data-value': commit_msg,
+									'title': commit_msg
+								}
+							};
+						}
+					}
 				},
 				{
 					fieldname: 'status_display',
 					label: __('Status'),
 					fieldtype: 'HTML',
 					width: 130,
-					align: 'center'
+					align: 'center',
+					cell_decorator: {
+						body(value, row) {
+							const status = (row && row.raw_app && (row.raw_app.is_repo ? (row.raw_app.is_clean ? 'Clean' : `${row.raw_app.uncommitted_count} Modified`) : 'Not Git')) || '';
+							return {
+								attributes: {
+									'data-value': status,
+									'title': status
+								}
+							};
+						}
+					}
 				},
 				{
 					fieldname: 'site_display',
 					label: __('Site Status'),
 					fieldtype: 'HTML',
 					width: 110,
-					align: 'center'
+					align: 'center',
+					cell_decorator: {
+						body(value, row) {
+							const site = (row && row.raw_app && (row.raw_app.is_installed ? 'Installed' : 'Available')) || '';
+							return {
+								attributes: {
+									'data-value': site,
+									'title': site
+								}
+							};
+						}
+					}
 				},
 				{
 					fieldname: 'actions_display',
@@ -431,7 +496,17 @@ let GitAppExplorer = Class.extend({
 					fieldtype: 'HTML',
 					width: 140,
 					no_filter: true,
-					align: 'center'
+					align: 'center',
+					cell_decorator: {
+						body() {
+							return {
+								attributes: {
+									'data-value': '',
+									'title': false
+								}
+							};
+						}
+					}
 				}
 			];
 
@@ -444,25 +519,89 @@ let GitAppExplorer = Class.extend({
 					pageSize: 25
 				}
 			});
+
+			const self = this;
+			this.sync_cell_attributes();
+
+			if (this.easy_table_instance.bus) {
+				const bus_events = ['table:render', 'sort:change', 'sort:reset', 'pagination:page-change', 'filter:change'];
+				bus_events.forEach(ev => {
+					this.easy_table_instance.bus.on(ev, () => {
+						setTimeout(() => self.sync_cell_attributes(), 0);
+					});
+				});
+			}
 		} else {
 			// Fallback standard table if EasyTable is not found
 			this.render_fallback_table($mount, table_data);
 		}
 	},
 
+	sync_cell_attributes: function () {
+		const $mount = this.page.main.find('.git-app-table-mount');
+		$mount.find('.easy-table-row, tr').each(function () {
+			const $row = $(this);
+			$row.find('.easy-table-cell, td').each(function () {
+				const $cell = $(this);
+				const fieldname = $cell.data('fieldname') || $cell.attr('data-fieldname');
+
+				if (fieldname === 'remote_display' || $cell.find('.remote-box').length) {
+					const git_url = $cell.find('.btn-copy-url').data('url') || $cell.find('.remote-box').data('value') || $cell.find('.remote-url-text').attr('title') || $cell.find('.remote-url-text').text().trim() || '';
+					this.setAttribute('data-value', git_url);
+					this.dataset.value = git_url;
+					if (git_url) {
+						this.setAttribute('title', git_url);
+					} else {
+						this.removeAttribute('title');
+					}
+				} else if (fieldname === 'actions_display' || $cell.find('.action-buttons').length) {
+					this.removeAttribute('title');
+					this.setAttribute('data-value', '');
+					this.dataset.value = '';
+				} else {
+					const titleAttr = this.getAttribute('title') || '';
+					const dataVal = this.getAttribute('data-value') || this.dataset.value || '';
+
+					if (titleAttr.includes('<') && titleAttr.includes('>')) {
+						const cleanText = $cell.text().replace(/\s+/g, ' ').trim();
+						if (cleanText) {
+							this.setAttribute('title', cleanText);
+						} else {
+							this.removeAttribute('title');
+						}
+					}
+
+					if (dataVal.includes('<') && dataVal.includes('>')) {
+						const cleanText = $cell.text().replace(/\s+/g, ' ').trim();
+						this.setAttribute('data-value', cleanText);
+						this.dataset.value = cleanText;
+					}
+				}
+			});
+		});
+	},
+
 	render_fallback_table: function ($mount, table_data) {
 		let rows_html = '';
 		table_data.forEach((row, idx) => {
+			const app_name = (row.raw_app && row.raw_app.app_name) || row.app_name || '';
+			const app_title = (row.raw_app && (row.raw_app.app_title || row.raw_app.app_name)) || '';
+			const branch = (row.raw_app && row.raw_app.branch) || '';
+			const git_url = (row.raw_app && row.raw_app.remote_url) || '';
+			const commit_msg = (row.raw_app && row.raw_app.latest_commit && row.raw_app.latest_commit.message) || '';
+			const status = (row.raw_app && (row.raw_app.is_repo ? (row.raw_app.is_clean ? 'Clean' : `${row.raw_app.uncommitted_count} Modified`) : 'Not Git')) || '';
+			const site = (row.raw_app && (row.raw_app.is_installed ? 'Installed' : 'Available')) || '';
+
 			rows_html += `
 				<tr>
 					<td style="width: 40px; text-align: center; color: var(--text-muted); font-size: 11px;">${idx + 1}</td>
-					<td>${row.app_display}</td>
-					<td>${row.app_title}</td>
-					<td>${row.branch_display}</td>
-					<td>${row.remote_display}</td>
-					<td>${row.commit_display}</td>
-					<td>${row.status_display}</td>
-					<td>${row.site_display}</td>
+					<td data-value="${frappe.utils.escape_html(app_name)}" title="${frappe.utils.escape_html(app_name)}">${row.app_display}</td>
+					<td data-value="${frappe.utils.escape_html(app_title)}" title="${frappe.utils.escape_html(app_title)}">${row.app_title}</td>
+					<td data-value="${frappe.utils.escape_html(branch)}" title="${frappe.utils.escape_html(branch)}">${row.branch_display}</td>
+					<td data-value="${frappe.utils.escape_html(git_url)}" title="${frappe.utils.escape_html(git_url)}">${row.remote_display}</td>
+					<td data-value="${frappe.utils.escape_html(commit_msg)}" title="${frappe.utils.escape_html(commit_msg)}">${row.commit_display}</td>
+					<td data-value="${frappe.utils.escape_html(status)}" title="${frappe.utils.escape_html(status)}">${row.status_display}</td>
+					<td data-value="${frappe.utils.escape_html(site)}" title="${frappe.utils.escape_html(site)}">${row.site_display}</td>
 					<td>${row.actions_display}</td>
 				</tr>
 			`;
