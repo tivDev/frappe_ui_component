@@ -17,7 +17,7 @@ export class TreeView {
     public doctypeControl: any = null;
     public presetsWrapper: HTMLElement | null = null;
     public searchInput!: HTMLInputElement;
-    public searchClearBtn!: HTMLElement;
+    public searchClearBtn!: HTMLButtonElement;
     public bodyElement!: HTMLElement;
     public emptyElement!: HTMLElement;
     public loadingElement!: HTMLElement;
@@ -91,19 +91,6 @@ export class TreeView {
             if (this.options.showDoctypeSelector) {
                 const dtSelectorContainer = document.createElement("div");
                 dtSelectorContainer.className = "tree-view__doctype-selector";
-
-                const dtLabel = document.createElement("label");
-                dtLabel.className = "tree-view__control-label";
-                dtLabel.innerHTML = `
-                    <svg class="tree-view__label-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
-                        <line x1="16" y1="13" x2="8" y2="13"></line>
-                        <line x1="16" y1="17" x2="8" y2="17"></line>
-                    </svg>
-                    <span>${__("DocType")}</span>
-                `;
-                dtSelectorContainer.appendChild(dtLabel);
 
                 this.doctypeWrapper = document.createElement("div");
                 this.doctypeWrapper.className = "tree-view__doctype-control-wrapper";
@@ -302,6 +289,7 @@ export class TreeView {
                     options: "DocType",
                     fieldname: "tree_doctype",
                     placeholder: this.options.doctypePlaceholder || __("Select DocType..."),
+                    reqd: 1,
                     get_query: () => ({
                         filters: {
                             istable: 0,
@@ -310,15 +298,14 @@ export class TreeView {
                         }
                     }),
                     change: () => {
-                        const val = this.doctypeControl?.get_value();
+                        const val = (this.doctypeControl?.get_value() || "").trim();
+                        this._updateLinkBtnVisibility();
                         if (val && val !== this.currentDoctype) {
                             this._updatePresetActiveState(val);
                             this.load_doctype(val);
                             this.options.onDoctypeChange?.(val);
-                        } else if (!val) {
-                            this.currentDoctype = null;
-                            this._updatePresetActiveState(null);
-                            this.show_empty(this.options.emptyText);
+                        } else if (!val && this.currentDoctype) {
+                            this.clear_doctype();
                         }
                     }
                 },
@@ -335,6 +322,24 @@ export class TreeView {
                     margin: 0
                 });
             }
+
+            if (this.doctypeControl.$input) {
+                this.doctypeControl.$input.on("input change blur", () => {
+                    this._updateLinkBtnVisibility();
+                });
+            }
+
+            if (this.doctypeControl.$wrapper) {
+                this.doctypeControl.$wrapper.on("click", ".btn-clear", (e: any) => {
+                    e?.preventDefault?.();
+                    e?.stopPropagation?.();
+                    setTimeout(() => {
+                        this.clear_doctype();
+                    }, 50);
+                });
+            }
+
+            this._updateLinkBtnVisibility();
         } else {
             // Fallback standard input
             const fallbackInput = document.createElement("input");
@@ -347,9 +352,67 @@ export class TreeView {
                     this._updatePresetActiveState(val);
                     this.load_doctype(val);
                     this.options.onDoctypeChange?.(val);
+                } else if (!val) {
+                    this.clear_doctype();
                 }
             });
             this.doctypeWrapper.appendChild(fallbackInput);
+        }
+    }
+
+    public clear_doctype(): void {
+        this.currentDoctype = null;
+        if (this.doctypeControl) {
+            this.doctypeControl.set_value("");
+        }
+        this._updateLinkBtnVisibility();
+        this._updatePresetActiveState(null);
+        this.nodes = [];
+        this.nodeMap.clear();
+        this.selectedNode = null;
+        if (this.bodyElement) {
+            this.bodyElement.innerHTML = "";
+            this.bodyElement.style.display = "none";
+        }
+        this.show_empty(this.options.emptyText);
+        this.options.onDoctypeChange?.("");
+    }
+
+    private _updateLinkBtnVisibility(): void {
+        if (!this.doctypeControl || !this.doctypeControl.$wrapper) return;
+        const val = (this.doctypeControl.get_value() || "").trim();
+        const $linkField = this.doctypeControl.$wrapper.find(".link-field");
+        if (!$linkField.length) return;
+
+        let $linkBtn = this.doctypeControl.$wrapper.find(".link-btn");
+        if ($linkBtn.length === 0) {
+            $linkBtn = $(`
+                <span class="link-btn">
+                    <a class="btn-clear" style="display: inline-block;" title="${__("Clear Link")}">
+                        ${typeof frappe !== "undefined" && frappe.utils?.icon ? frappe.utils.icon("close", "xs", "es-icon") : "&times;"}
+                    </a>
+                    <a class="btn-open" tabIndex="-1" style="display: inline-block;" title="${__("Open Link")}">
+                        ${typeof frappe !== "undefined" && frappe.utils?.icon ? frappe.utils.icon("arrow-right", "xs") : "&rarr;"}
+                    </a>
+                </span>
+            `).appendTo($linkField);
+        }
+
+        if (val) {
+            $linkField.addClass("has-value");
+            $linkBtn.attr("style", "display: inline-flex !important;");
+            const options = this.doctypeControl.get_options
+                ? this.doctypeControl.get_options()
+                : (this.doctypeControl.df ? this.doctypeControl.df.options : "DocType");
+            if (options) {
+                const href = typeof frappe !== "undefined" && frappe.utils?.get_form_link
+                    ? frappe.utils.get_form_link(options, val)
+                    : `/app/${options.toLowerCase()}/${encodeURIComponent(val)}`;
+                $linkBtn.find(".btn-open").attr("href", href);
+            }
+        } else {
+            $linkField.removeClass("has-value");
+            $linkBtn.attr("style", "display: none !important;");
         }
     }
 
@@ -370,6 +433,7 @@ export class TreeView {
         this._updatePresetActiveState(doctype);
         if (this.doctypeControl) {
             this.doctypeControl.set_value(doctype);
+            this._updateLinkBtnVisibility();
         } else {
             this.load_doctype(doctype);
             this.options.onDoctypeChange?.(doctype);
