@@ -1,0 +1,60 @@
+<div class="git-app-explorer-container" id="gitAppExplorerContainer">
+	<!-- Unified Header Card -->
+	<div class="git-card">
+		<!-- Top Controls Row -->
+		<div class="git-controls-row">
+			<!-- Left: Status Filter Dropdown -->
+			<div class="git-inputs-group">
+				<div class="filter-dropdown-wrapper">
+					<select class="form-control input-sm git-status-filter">
+						<option value="all">{{ __("All Repositories") }}</option>
+						<option value="clean">{{ __("Clean Working Tree") }}</option>
+						<option value="dirty">{{ __("Uncommitted Changes") }}</option>
+						<option value="installed">{{ __("Installed on Site") }}</option>
+						<option value="custom">{{ __("Custom Apps Only") }}</option>
+					</select>
+				</div>
+			</div>
+
+			<!-- Right: Quick Presets & Refresh Button -->
+			<div class="git-presets-group">
+				<span class="preset-label">{{ __("Quick Filters:") }}</span>
+				<div class="preset-buttons">
+					<span class="preset-pill active" data-filter="all">{{ __("All") }}</span>
+					<span class="preset-pill" data-filter="rsn">{{ __("RSN App") }}</span>
+					<span class="preset-pill" data-filter="custom">{{ __("Custom") }}</span>
+					<span class="preset-pill" data-filter="dirty">{{ __("Changes") }}</span>
+					<span class="preset-pill" data-filter="installed">{{ __("Installed") }}</span>
+				</div>
+				<button class="btn btn-default btn-sm btn-refresh-git" title="{{ __("Reload Git Status") }}">
+					<i class="fa fa-refresh"></i> {{ __("Refresh") }}
+				</button>
+			</div>
+		</div>
+
+		<!-- Bottom Summary Badges Row -->
+		<div class="git-summary-row">
+			<div class="summary-left">
+				<div class="git-meta-badges">
+					<span class="badge-tag badge-tag-total" id="badgeTotalApps">-- Apps</span>
+					<span class="badge-tag badge-tag-repo" id="badgeTotalRepos">-- Git Repos</span>
+					<span class="badge-tag badge-tag-clean" id="badgeCleanRepos">-- Clean</span>
+					<span class="badge-tag badge-tag-dirty" id="badgeDirtyRepos">-- Changes</span>
+					<span class="badge-tag badge-tag-site" id="badgeSiteApps">Site: --</span>
+				</div>
+			</div>
+			<div class="summary-right">
+				<div class="git-legend">
+					<span class="legend-item"><span class="legend-dot dot-clean"></span> {{ __("Clean") }}</span>
+					<span class="legend-item"><span class="legend-dot dot-dirty"></span> {{ __("Modified") }}</span>
+					<span class="legend-item"><span class="legend-dot dot-installed"></span> {{ __("Installed") }}</span>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Main Table / Cards Mount Container -->
+	<div class="git-app-table-mount">
+		<div class="git-skeleton-box"></div>
+	</div>
+</div>
