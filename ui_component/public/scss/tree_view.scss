@@ -95,6 +95,16 @@
         width: 100%;
       }
 
+      .link-field {
+        position: relative !important;
+        width: 100% !important;
+        display: block !important;
+
+        &.has-value .link-btn {
+          display: inline-flex !important;
+        }
+      }
+
       input.input-sm,
       input.input-xs,
       input.form-control,
@@ -107,6 +117,7 @@
         background: var(--control-bg, #ffffff) !important;
         color: var(--text-color, #1f2937) !important;
         box-shadow: none !important;
+        padding-right: 48px !important;
         transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
 
         &:focus {
@@ -116,7 +127,42 @@
       }
 
       .link-btn {
-        top: 4px !important;
+        position: absolute !important;
+        top: 50% !important;
+        right: 8px !important;
+        transform: translateY(-50%) !important;
+        display: none !important;
+        align-items: center !important;
+        gap: 4px !important;
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        z-index: 3 !important;
+
+        a {
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          padding: 2px !important;
+          color: var(--text-muted, #64748b) !important;
+          border-radius: 4px !important;
+          text-decoration: none !important;
+          line-height: 1 !important;
+          background: transparent !important;
+          border: none !important;
+          cursor: pointer !important;
+          transition: color 0.15s ease, background-color 0.15s ease !important;
+
+          &:hover {
+            color: var(--text-color, #0f172a) !important;
+            background-color: rgba(0, 0, 0, 0.06) !important;
+          }
+
+          svg {
+            display: block;
+          }
+        }
       }
     }
   }
@@ -640,6 +686,11 @@ body.theme-dark .tree-view {
   .skeleton-box {
     background: linear-gradient(90deg, #2a2a2a 25%, #383838 50%, #2a2a2a 75%);
     background-size: 200% 100%;
+  }
+
+  .tree-view__doctype-control-wrapper .link-btn a:hover {
+    color: #f1f5f9 !important;
+    background-color: rgba(255, 255, 255, 0.1) !important;
   }
 }
 

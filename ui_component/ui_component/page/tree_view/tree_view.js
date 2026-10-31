@@ -11,7 +11,11 @@ frappe.pages['tree-view'].on_page_load = function (wrapper) {
 		showDoctypeSelector: true,
 		doctype: (frappe.route_options && frappe.route_options.doctype) || (frappe.get_route()[1] !== 'tree-view' ? frappe.get_route()[1] : ''),
 		onDoctypeChange: function (dt) {
-			page.set_title(__('Tree View: {0}', [dt]));
+			if (dt) {
+				page.set_title(__('Tree View: {0}', [dt]));
+			} else {
+				page.set_title(__('Tree View Explorer'));
+			}
 		}
 	});
 
