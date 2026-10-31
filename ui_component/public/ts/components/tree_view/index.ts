@@ -17,7 +17,7 @@ export class TreeView {
     public doctypeControl: any = null;
     public presetsWrapper: HTMLElement | null = null;
     public searchInput!: HTMLInputElement;
-    public searchClearBtn!: HTMLElement;
+    public searchClearBtn!: HTMLButtonElement;
     public bodyElement!: HTMLElement;
     public emptyElement!: HTMLElement;
     public loadingElement!: HTMLElement;
@@ -91,19 +91,6 @@ export class TreeView {
             if (this.options.showDoctypeSelector) {
                 const dtSelectorContainer = document.createElement("div");
                 dtSelectorContainer.className = "tree-view__doctype-selector";
-
-                const dtLabel = document.createElement("label");
-                dtLabel.className = "tree-view__control-label";
-                dtLabel.innerHTML = `
-                    <svg class="tree-view__label-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
-                        <line x1="16" y1="13" x2="8" y2="13"></line>
-                        <line x1="16" y1="17" x2="8" y2="17"></line>
-                    </svg>
-                    <span>${__("DocType")}</span>
-                `;
-                dtSelectorContainer.appendChild(dtLabel);
 
                 this.doctypeWrapper = document.createElement("div");
                 this.doctypeWrapper.className = "tree-view__doctype-control-wrapper";
@@ -302,6 +289,7 @@ export class TreeView {
                     options: "DocType",
                     fieldname: "tree_doctype",
                     placeholder: this.options.doctypePlaceholder || __("Select DocType..."),
+                    reqd: 1,
                     get_query: () => ({
                         filters: {
                             istable: 0,

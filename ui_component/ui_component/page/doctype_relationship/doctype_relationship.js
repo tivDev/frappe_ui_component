@@ -579,6 +579,7 @@ let doctype_relationship = Class.extend({
 				fieldtype: 'Link',
 				options: 'DocType',
 				width: 200,
+				reqd: 1,
 				cell_decorator: {
 					body() {
 						return {

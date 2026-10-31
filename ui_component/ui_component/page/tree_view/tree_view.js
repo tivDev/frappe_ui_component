@@ -15,16 +15,4 @@ frappe.pages['tree-view'].on_page_load = function (wrapper) {
 		}
 	});
 
-	// Header actions
-	page.set_primary_action(__('Refresh'), function () {
-		tree_view.refresh();
-	}, 'refresh');
-
-	page.add_button(__('Expand All'), function () {
-		tree_view.expand_all();
-	});
-
-	page.add_button(__('Collapse All'), function () {
-		tree_view.collapse_all();
-	});
 };
