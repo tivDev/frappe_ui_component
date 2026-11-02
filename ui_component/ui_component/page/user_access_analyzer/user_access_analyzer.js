@@ -14,13 +14,24 @@ let user_access_analyzer = Class.extend({
 		this.current_doctype = null;
 		this.current_docname = null;
 		this.current_access_type = 'All';
-		this.current_access_status = 'All';
+		this.current_access_status = 'allowed';
+
+		this.page_length = 100;
+		this.all_records = [];
+		this.loaded_count = 0;
+		this.total_candidate_count = 0;
+		this.has_more = false;
+		this.next_start = 0;
+		this.is_loading_more = false;
+		this.is_initializing = true;
+		this.last_rendered_doctype = null;
 
 		this.easy_table_instance = null;
 		this.current_data = null;
 		this._analysis_timer = null;
 
 		this.make();
+		this.is_initializing = false;
 	},
 
 	make: function () {
@@ -176,14 +187,12 @@ let user_access_analyzer = Class.extend({
 				label: __('Access Status'),
 				placeholder: __('Access Status'),
 				options: [
-					{ label: __('All Statuses'), value: 'All' },
 					{ label: __('Allowed'), value: 'allowed' },
-					{ label: __('Denied'), value: 'denied' },
-					{ label: __('Indeterminate'), value: 'indeterminate' }
+					{ label: __('Denied'), value: 'denied' }
 				],
-				default: 'All',
+				default: 'allowed',
 				change: () => {
-					const stat = this.access_status_control.get_value() || 'All';
+					const stat = this.access_status_control.get_value() || 'allowed';
 					if (stat === this.current_access_status) return;
 					this.current_access_status = stat;
 					this.trigger_auto_analysis();
@@ -191,7 +200,7 @@ let user_access_analyzer = Class.extend({
 			},
 			render_input: true
 		});
-		this.access_status_control.set_value('All');
+		this.access_status_control.set_value('allowed');
 	},
 
 	update_link_btn_visibility: function (control) {
@@ -310,9 +319,31 @@ let user_access_analyzer = Class.extend({
 		this.page.main.find('.btn-clear-analysis').on('click', () => {
 			this.clear_all();
 		});
+
+		this.page.main.on('click', '.btn-page-size', (e) => {
+			e.preventDefault();
+			const $btn = $(e.currentTarget);
+			$btn.blur();
+			const newSize = parseInt($btn.data('size'), 10) || 100;
+			if (newSize === this.page_length && this.all_records.length > 0) return;
+
+			this.page_length = newSize;
+			this.page.main.find('.btn-page-size').removeClass('active');
+			$btn.addClass('active');
+
+			this.run_analysis({ preserve_scroll: true });
+		});
+
+		this.page.main.on('click', '.btn-load-more', (e) => {
+			e.preventDefault();
+			const $btn = $(e.currentTarget);
+			$btn.blur();
+			this.load_more_data();
+		});
 	},
 
 	trigger_auto_analysis: function () {
+		if (this.is_initializing) return;
 		const user = this.current_user;
 		const doctype = this.current_doctype;
 		if (user && doctype) {
@@ -323,6 +354,7 @@ let user_access_analyzer = Class.extend({
 		} else {
 			this.render_empty(__('Please select a User and DocType to begin access analysis.'));
 			this.page.main.find('.analyzer-summary-row').hide();
+			this.page.main.find('.analyzer-pagination-bar').hide();
 		}
 	},
 
@@ -354,12 +386,12 @@ let user_access_analyzer = Class.extend({
 		}
 	},
 
-	run_analysis: function () {
+	run_analysis: function (options = {}) {
 		const user = this.current_user;
 		const doctype = this.current_doctype;
 		const docname = this.current_docname;
 		const access_type = this.current_access_type || 'All';
-		const access_status = this.current_access_status || 'All';
+		const access_status = this.current_access_status || 'allowed';
 
 		if (!user || !doctype) {
 			frappe.show_alert({
@@ -369,10 +401,47 @@ let user_access_analyzer = Class.extend({
 			return;
 		}
 
+		const preserveScroll = Boolean(options && options.preserve_scroll);
 		const $tableMount = this.page.main.find('.user-access-analyzer-table-mount');
-		$tableMount.html('<div class="analyzer-skeleton-box"></div>');
+
+		let restoreScroll = null;
+		if (preserveScroll) {
+			const prevHeight = $tableMount.outerHeight();
+			if (prevHeight > 100) {
+				$tableMount.css('min-height', prevHeight + 'px');
+			}
+			const scrollY = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+			const tbodyScrollTop = this.easy_table_instance?.store?.tbody?.scrollTop || 0;
+
+			restoreScroll = () => {
+				const doRestore = () => {
+					const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+					const targetY = Math.min(scrollY, maxScroll);
+					window.scrollTo({
+						top: targetY,
+						behavior: 'instant'
+					});
+					if (tbodyScrollTop > 0 && this.easy_table_instance?.store?.tbody) {
+						this.easy_table_instance.store.tbody.scrollTop = tbodyScrollTop;
+					}
+					$tableMount.css('min-height', '');
+				};
+
+				requestAnimationFrame(() => {
+					doRestore();
+					setTimeout(doRestore, 60);
+				});
+			};
+		} else {
+			if (!this.easy_table_instance) {
+				$tableMount.html('<div class="analyzer-skeleton-box"></div>');
+			}
+			this.page.main.find('.analyzer-pagination-bar').hide();
+		}
 
 		this.page.set_title(`${__('Access Analysis')}: ${user} (${doctype})`);
+
+		const req_page_length = docname ? 1 : (this.page_length || 100);
 
 		frappe.call({
 			method: 'ui_component.ui_component.page.user_access_analyzer.api.get_user_access_analysis',
@@ -383,31 +452,164 @@ let user_access_analyzer = Class.extend({
 				access_type: access_type,
 				access_status: access_status,
 				limit_start: 0,
-				page_length: 50
+				page_length: req_page_length
 			},
 			callback: (r) => {
-				setTimeout(() => {
-					if (r && r.message) {
-						this.render_results(r.message);
-					} else {
-						this.render_empty(__('No data returned for the selected analysis.'));
+				if (r && r.message) {
+					const data = r.message;
+					this.current_data = data;
+					const records = data.records || [];
+					const summary = data.summary || {};
+
+					this.all_records = records.slice();
+					this.loaded_count = summary.analyzed || records.length;
+					this.total_candidate_count = summary.total_candidate_count || 0;
+					this.has_more = Boolean(summary.has_more);
+					this.next_start = summary.next_start || req_page_length;
+
+					this.render_results(data);
+					this.update_pagination_ui();
+
+					if (restoreScroll) {
+						restoreScroll();
 					}
-				}, 600);
+				} else {
+					$tableMount.css('min-height', '');
+					this.render_empty(__('No data returned for the selected analysis.'));
+					this.page.main.find('.analyzer-pagination-bar').hide();
+				}
 			},
 			error: () => {
-				setTimeout(() => {
-					$tableMount.html(`
-						<div class="empty-state text-center text-danger">
-							<div class="empty-title">${__('Error analyzing user access. Please verify parameters and permissions.')}</div>
-						</div>
-					`);
-				}, 600);
+				$tableMount.css('min-height', '');
+				if (this.easy_table_instance && typeof this.easy_table_instance.destroy === 'function') {
+					try { this.easy_table_instance.destroy(); } catch (e) {}
+				}
+				this.easy_table_instance = null;
+				$tableMount.html(`
+					<div class="empty-state text-center text-danger">
+						<div class="empty-title">${__('Error analyzing user access. Please verify parameters and permissions.')}</div>
+					</div>
+				`);
+				this.page.main.find('.analyzer-pagination-bar').hide();
+			}
+		});
+	},
+
+	load_more_data: function () {
+		if (this.is_loading_more || !this.has_more) return;
+
+		this.is_loading_more = true;
+		const $btn = this.page.main.find('.btn-load-more');
+		const originalText = $btn.html();
+		$btn.prop('disabled', true).html(`<i class="fa fa-spinner fa-spin mr-1"></i> ${__('Loading...')}`);
+
+		const $tableMount = this.page.main.find('.user-access-analyzer-table-mount');
+		const prevHeight = $tableMount.outerHeight();
+		if (prevHeight > 100) {
+			$tableMount.css('min-height', prevHeight + 'px');
+		}
+		const scrollY = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+		const tbodyScrollTop = this.easy_table_instance?.store?.tbody?.scrollTop || 0;
+
+		const restoreScroll = () => {
+			const doRestore = () => {
+				const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+				const targetY = Math.min(scrollY, maxScroll);
+				window.scrollTo({
+					top: targetY,
+					behavior: 'instant'
+				});
+				if (tbodyScrollTop > 0 && this.easy_table_instance?.store?.tbody) {
+					this.easy_table_instance.store.tbody.scrollTop = tbodyScrollTop;
+				}
+				$tableMount.css('min-height', '');
+			};
+
+			requestAnimationFrame(() => {
+				doRestore();
+				setTimeout(doRestore, 60);
+			});
+		};
+
+		const user = this.current_user;
+		const doctype = this.current_doctype;
+		const docname = this.current_docname;
+		const access_type = this.current_access_type || 'All';
+		const access_status = this.current_access_status || 'allowed';
+
+		frappe.call({
+			method: 'ui_component.ui_component.page.user_access_analyzer.api.get_user_access_analysis',
+			args: {
+				user: user,
+				doctype: doctype,
+				document_name: docname,
+				access_type: access_type,
+				access_status: access_status,
+				limit_start: this.next_start,
+				page_length: this.page_length || 100
+			},
+			callback: (r) => {
+				this.is_loading_more = false;
+				$btn.prop('disabled', false).html(originalText);
+
+				if (r && r.message) {
+					const data = r.message;
+					const newRecords = data.records || [];
+					const summary = data.summary || {};
+
+					// Track existing names to prevent duplicate rows
+					const existingNames = new Set(this.all_records.map((rec) => rec.name));
+					let newlyAdded = 0;
+					newRecords.forEach((rec) => {
+						if (!existingNames.has(rec.name)) {
+							existingNames.add(rec.name);
+							this.all_records.push(rec);
+							newlyAdded++;
+						}
+					});
+
+					this.loaded_count += (summary.analyzed || newlyAdded);
+					this.has_more = Boolean(summary.has_more);
+					this.next_start = summary.next_start || (this.next_start + (this.page_length || 100));
+
+					this.render_summary(data);
+
+					if (this.easy_table_instance) {
+						this.render_table(this.all_records, doctype);
+					}
+
+					this.update_pagination_ui();
+					restoreScroll();
+				} else {
+					$tableMount.css('min-height', '');
+				}
+			},
+			error: () => {
+				this.is_loading_more = false;
+				$btn.prop('disabled', false).html(originalText);
+				$tableMount.css('min-height', '');
+				frappe.show_alert({
+					message: __('Failed to load more candidate records.'),
+					indicator: 'red'
+				});
 			}
 		});
 	},
 
 	render_results: function (data) {
 		this.current_data = data;
+		this.render_summary(data);
+
+		const records = data.records || [];
+		if (records.length === 0) {
+			this.render_empty(data.message || __('No matching candidate records found for analysis.'));
+			return;
+		}
+
+		this.render_table(this.all_records, data.doctype);
+	},
+
+	render_summary: function (data) {
 		const $summaryRow = this.page.main.find('.analyzer-summary-row');
 		const $badges = $summaryRow.find('.analyzer-meta-badges');
 		$badges.empty();
@@ -428,11 +630,42 @@ let user_access_analyzer = Class.extend({
 
 		// Summary Counts
 		const s = data.summary || {};
-		$badges.append(`<span class="badge-tag badge-tag-total">${s.analyzed || 0} ${__('Analyzed')}</span>`);
-		$badges.append(`<span class="badge-tag badge-tag-desk-yes">✓ ${s.accessible || 0} ${__('Accessible')}</span>`);
-		$badges.append(`<span class="badge-tag badge-tag-desk-no">✗ ${s.inaccessible || 0} ${__('Inaccessible')}</span>`);
-		if (s.indeterminate > 0) {
-			$badges.append(`<span class="badge-tag badge-tag-indeterminate">? ${s.indeterminate} ${__('Indeterminate')}</span>`);
+		const analyzedCount = this.all_records ? this.all_records.length : (s.analyzed || 0);
+
+		let accessibleCount = 0;
+		let inaccessibleCount = 0;
+		let indeterminateCount = 0;
+
+		if (this.all_records && this.all_records.length > 0) {
+			this.all_records.forEach((r) => {
+				const isAllowed = (statusObj) => {
+					const st = (typeof statusObj === 'string' ? statusObj : statusObj?.status || '').toLowerCase().trim();
+					return st === 'allowed';
+				};
+				const isIndeterminate = (statusObj) => {
+					const st = (typeof statusObj === 'string' ? statusObj : statusObj?.status || '').toLowerCase().trim();
+					return st === 'indeterminate';
+				};
+
+				if (isAllowed(r.detail_read_access) || isAllowed(r.list_visibility) || isAllowed(r.write_access)) {
+					accessibleCount++;
+				} else if (isIndeterminate(r.detail_read_access) || isIndeterminate(r.list_visibility)) {
+					indeterminateCount++;
+				} else {
+					inaccessibleCount++;
+				}
+			});
+		} else {
+			accessibleCount = s.accessible || 0;
+			inaccessibleCount = s.inaccessible || 0;
+			indeterminateCount = s.indeterminate || 0;
+		}
+
+		$badges.append(`<span class="badge-tag badge-tag-total">${analyzedCount} ${__('Analyzed')}</span>`);
+		$badges.append(`<span class="badge-tag badge-tag-desk-yes">✓ ${accessibleCount} ${__('Accessible')}</span>`);
+		$badges.append(`<span class="badge-tag badge-tag-desk-no">✗ ${inaccessibleCount} ${__('Inaccessible')}</span>`);
+		if (indeterminateCount > 0) {
+			$badges.append(`<span class="badge-tag badge-tag-indeterminate">? ${indeterminateCount} ${__('Indeterminate')}</span>`);
 		}
 
 		// DocType Meta
@@ -471,29 +704,51 @@ let user_access_analyzer = Class.extend({
 		}
 
 		$summaryRow.show();
+	},
 
-		const records = data.records || [];
-		if (records.length === 0) {
-			this.render_empty(data.message || __('No matching candidate records found for analysis.'));
+	update_pagination_ui: function () {
+		const $bar = this.page.main.find('.analyzer-pagination-bar');
+		if (!this.all_records || this.all_records.length === 0 || this.current_docname) {
+			$bar.hide();
 			return;
 		}
 
-		this.render_table(records, data.doctype);
+		// Update active button in page size group
+		$bar.find('.btn-page-size').removeClass('active');
+		$bar.find(`.btn-page-size[data-size="${this.page_length}"]`).addClass('active');
+
+		// Calculate from and to
+		const total = this.total_candidate_count || 0;
+		const from = total > 0 ? 1 : 0;
+		const to = Math.min(this.loaded_count || this.all_records.length, total);
+
+		// Format info text: Showing 1-100 of 9355 candidate records
+		const fromToStr = total > 0 ? `${from}-${to}` : '0';
+		$bar.find('.page-from-to').text(fromToStr);
+		$bar.find('.page-total').text(total);
+
+		// Handle Load More button & page size group
+		const $loadMoreBtn = $bar.find('.btn-load-more');
+		const $pageSizeGroup = $bar.find('.page-size-group');
+
+		$pageSizeGroup.show();
+		$loadMoreBtn.show();
+		if (this.has_more) {
+			$loadMoreBtn.prop('disabled', false).text(__('Load More'));
+		} else {
+			$loadMoreBtn.prop('disabled', true).text(__('Load More'));
+		}
+
+		$bar.show();
 	},
 
 	render_table: function (records, doctype) {
 		const $tableMount = this.page.main.find('.user-access-analyzer-table-mount');
-		$tableMount.empty();
 
 		const EasyTable = (window.ditech && window.ditech.ui && window.ditech.ui.EasyTable) || window.EasyTable;
 		if (!EasyTable) {
 			$tableMount.html(`<div class="alert alert-warning m-3">${__('EasyTable library could not be loaded.')}</div>`);
 			return;
-		}
-
-		if (this.easy_table_instance && typeof this.easy_table_instance.destroy === 'function') {
-			try { this.easy_table_instance.destroy(); } catch (e) { console.warn(e); }
-			this.easy_table_instance = null;
 		}
 
 		const formatBadge = (statusObj) => {
@@ -675,6 +930,22 @@ let user_access_analyzer = Class.extend({
 			};
 		});
 
+		// If EasyTable instance already exists, smoothly update the data without tearing down DOM
+		if (this.easy_table_instance && this.last_rendered_doctype === doctype && typeof this.easy_table_instance.setData === 'function') {
+			if (this.easy_table_instance.store) {
+				this.easy_table_instance.store.pageSize = this.page_length || 100;
+			}
+			this.easy_table_instance.setData(tableData);
+			return;
+		}
+
+		if (this.easy_table_instance && typeof this.easy_table_instance.destroy === 'function') {
+			try { this.easy_table_instance.destroy(); } catch (e) { console.warn(e); }
+			this.easy_table_instance = null;
+		}
+
+		this.last_rendered_doctype = doctype;
+		$tableMount.empty();
 		const tableMountEl = $tableMount[0];
 		this.easy_table_instance = new EasyTable({
 			parent: tableMountEl,
@@ -682,13 +953,18 @@ let user_access_analyzer = Class.extend({
 			data: tableData,
 			pagination: {
 				enabled: true,
-				pageSize: 50
+				pageSize: this.page_length || 100
 			}
 		});
 	},
 
 	render_empty: function (message) {
+		if (this.easy_table_instance && typeof this.easy_table_instance.destroy === 'function') {
+			try { this.easy_table_instance.destroy(); } catch (e) { console.warn(e); }
+			this.easy_table_instance = null;
+		}
 		const $tableMount = this.page.main.find('.user-access-analyzer-table-mount');
+		$tableMount.css('min-height', '');
 		$tableMount.html(`
 			<div class="empty-state text-center text-muted">
 				<div class="empty-icon">
@@ -697,9 +973,20 @@ let user_access_analyzer = Class.extend({
 				<div class="empty-title">${message || __('Nothing to show')}</div>
 			</div>
 		`);
+		this.page.main.find('.analyzer-pagination-bar').hide();
 	},
 
 	clear_all: function () {
+		if (this.easy_table_instance && typeof this.easy_table_instance.destroy === 'function') {
+			try { this.easy_table_instance.destroy(); } catch (e) { console.warn(e); }
+			this.easy_table_instance = null;
+		}
+		this.all_records = [];
+		this.loaded_count = 0;
+		this.total_candidate_count = 0;
+		this.has_more = false;
+		this.next_start = 0;
+
 		if (this.user_control) {
 			this.user_control.set_value('');
 			this.update_link_btn_visibility(this.user_control);
@@ -712,14 +999,16 @@ let user_access_analyzer = Class.extend({
 		this.current_doctype = null;
 		this.update_document_control(null);
 		if (this.access_type_control) this.access_type_control.set_value('All');
-		if (this.access_status_control) this.access_status_control.set_value('All');
+		if (this.access_status_control) this.access_status_control.set_value('allowed');
 
 		this.current_data = null;
 		this.page.set_title(__('User Access Analyzer'));
 		this.update_preset_active_state(null);
 		this.page.main.find('.analyzer-summary-row').hide();
+		this.page.main.find('.analyzer-pagination-bar').hide();
 
 		const $tableMount = this.page.main.find('.user-access-analyzer-table-mount');
+		$tableMount.css('min-height', '');
 		$tableMount.html(`
 			<div class="empty-state-no-filter text-center text-muted">
 				${__('Please select a User and DocType to begin access analysis.')}

@@ -16,6 +16,7 @@ let customer_portal_insp = Class.extend({
 
 		this.all_records = [];
 		this.loaded_customer_names = new Set();
+		this.page_length = 100;
 		this.loaded_customer_count = 0;
 		this.total_customer_count = 0;
 		this.total_portal_users = 0;
@@ -25,8 +26,10 @@ let customer_portal_insp = Class.extend({
 
 		this.easy_table_instance = null;
 		this._filter_timer = null;
+		this.is_initializing = true;
 
 		this.make();
+		this.is_initializing = false;
 	},
 
 	make: function () {
@@ -168,12 +171,30 @@ let customer_portal_insp = Class.extend({
 			this.clear_all();
 		});
 
-		this.page.main.find('.btn-load-more').on('click', () => {
+		this.page.main.on('click', '.btn-page-size', (e) => {
+			e.preventDefault();
+			const $btn = $(e.currentTarget);
+			$btn.blur();
+			const newSize = parseInt($btn.data('size'), 10) || 100;
+			if (newSize === this.page_length && this.all_records.length > 0) return;
+
+			this.page_length = newSize;
+			this.page.main.find('.btn-page-size').removeClass('active');
+			$btn.addClass('active');
+
+			this.load_initial_data({ preserve_scroll: true });
+		});
+
+		this.page.main.on('click', '.btn-load-more', (e) => {
+			e.preventDefault();
+			const $btn = $(e.currentTarget);
+			$btn.blur();
 			this.load_more_data();
 		});
 	},
 
 	trigger_auto_reload: function () {
+		if (this.is_initializing) return;
 		clearTimeout(this._filter_timer);
 		this._filter_timer = setTimeout(() => {
 			this.load_initial_data();
@@ -198,20 +219,54 @@ let customer_portal_insp = Class.extend({
 		}
 	},
 
-	load_initial_data: function () {
+	load_initial_data: function (options = {}) {
+		const preserveScroll = Boolean(options && options.preserve_scroll);
 		const $tableMount = this.page.main.find('.customer-portal-table-mount');
-		$tableMount.html('<div class="portal-skeleton-box"></div>');
-		this.page.main.find('.portal-load-more-wrapper').hide();
+
+		let restoreScroll = null;
+		if (preserveScroll) {
+			const prevHeight = $tableMount.outerHeight();
+			if (prevHeight > 100) {
+				$tableMount.css('min-height', prevHeight + 'px');
+			}
+			const scrollY = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+			const tbodyScrollTop = this.easy_table_instance?.store?.tbody?.scrollTop || 0;
+
+			restoreScroll = () => {
+				const doRestore = () => {
+					const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+					const targetY = Math.min(scrollY, maxScroll);
+					window.scrollTo({
+						top: targetY,
+						behavior: 'instant'
+					});
+					if (tbodyScrollTop > 0 && this.easy_table_instance?.store?.tbody) {
+						this.easy_table_instance.store.tbody.scrollTop = tbodyScrollTop;
+					}
+					$tableMount.css('min-height', '');
+				};
+
+				requestAnimationFrame(() => {
+					doRestore();
+					setTimeout(doRestore, 60);
+				});
+			};
+		} else {
+			if (!this.easy_table_instance) {
+				$tableMount.html('<div class="portal-skeleton-box"></div>');
+			}
+			this.page.main.find('.portal-pagination-bar').hide();
+		}
 
 		this.all_records = [];
 		this.loaded_customer_names = new Set();
 		this.next_start = 0;
 
-		let page_length = 50;
+		let req_page_length = this.page_length || 100;
 		if (this.current_customer) {
-			page_length = 1;
+			req_page_length = 1;
 		} else if (this.current_user) {
-			page_length = 0;
+			req_page_length = 0;
 		}
 
 		frappe.call({
@@ -221,50 +276,57 @@ let customer_portal_insp = Class.extend({
 				user: this.current_user,
 				has_portal_user: this.current_has_user || 'Has User',
 				limit_start: 0,
-				page_length: page_length
+				page_length: req_page_length
 			},
 			callback: (r) => {
-				setTimeout(() => {
-					if (r && r.message) {
-						const msg = r.message;
-						const records = msg.records || [];
-						const summary = msg.summary || {};
+				if (r && r.message) {
+					const msg = r.message;
+					const records = msg.records || [];
+					const summary = msg.summary || {};
 
-						this.all_records = records.slice();
-						records.forEach((row) => {
-							if (row.indent === 0 && row.customer) {
-								this.loaded_customer_names.add(row.customer);
-							}
-						});
-
-						this.loaded_customer_count = summary.loaded_customer_groups || 0;
-						this.total_customer_count = summary.total_customer_groups || 0;
-						this.total_portal_users = summary.total_portal_users || 0;
-						this.has_more = Boolean(summary.has_more);
-						this.next_start = summary.next_start || 50;
-
-						this.render_summary();
-
-						if (this.all_records.length === 0) {
-							this.render_empty(msg.message || __('No Customer Portal records found.'));
-						} else {
-							this.render_table(this.all_records);
+					this.all_records = records.slice();
+					records.forEach((row) => {
+						if (row.indent === 0 && row.customer) {
+							this.loaded_customer_names.add(row.customer);
 						}
+					});
 
-						this.update_load_more_ui();
+					this.loaded_customer_count = summary.loaded_customer_groups || 0;
+					this.total_customer_count = summary.total_customer_groups || 0;
+					this.total_portal_users = summary.total_portal_users || 0;
+					this.has_more = Boolean(summary.has_more);
+					this.next_start = summary.next_start || req_page_length;
+
+					this.render_summary();
+
+					if (this.all_records.length === 0) {
+						this.render_empty(msg.message || __('No Customer Portal records found.'));
 					} else {
-						this.render_empty(__('No data returned for Customer Portal.'));
+						this.render_table(this.all_records);
 					}
-				}, 200);
+
+					this.update_pagination_ui();
+
+					if (restoreScroll) {
+						restoreScroll();
+					}
+				} else {
+					$tableMount.css('min-height', '');
+					this.render_empty(__('No data returned for Customer Portal.'));
+				}
 			},
 			error: () => {
-				setTimeout(() => {
-					$tableMount.html(`
-						<div class="empty-state text-center text-danger">
-							<div>${__('Error loading Customer Portal Inspector. Please check permissions.')}</div>
-						</div>
-					`);
-				}, 200);
+				$tableMount.css('min-height', '');
+				if (this.easy_table_instance && typeof this.easy_table_instance.destroy === 'function') {
+					try { this.easy_table_instance.destroy(); } catch (e) {}
+				}
+				this.easy_table_instance = null;
+				$tableMount.html(`
+					<div class="empty-state text-center text-danger">
+						<div>${__('Error loading Customer Portal Inspector. Please check permissions.')}</div>
+					</div>
+				`);
+				this.page.main.find('.portal-pagination-bar').hide();
 			}
 		});
 	},
@@ -275,7 +337,35 @@ let customer_portal_insp = Class.extend({
 		this.is_loading_more = true;
 		const $btn = this.page.main.find('.btn-load-more');
 		const originalText = $btn.html();
-		$btn.prop('disabled', true).html(`<i class="fa fa-spinner fa-spin mr-1"></i> ${__('Loading next 50 customers...')}`);
+		$btn.prop('disabled', true).html(`<i class="fa fa-spinner fa-spin mr-1"></i> ${__('Loading...')}`);
+
+		const $tableMount = this.page.main.find('.customer-portal-table-mount');
+		const prevHeight = $tableMount.outerHeight();
+		if (prevHeight > 100) {
+			$tableMount.css('min-height', prevHeight + 'px');
+		}
+		const scrollY = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+		const tbodyScrollTop = this.easy_table_instance?.store?.tbody?.scrollTop || 0;
+
+		const restoreScroll = () => {
+			const doRestore = () => {
+				const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+				const targetY = Math.min(scrollY, maxScroll);
+				window.scrollTo({
+					top: targetY,
+					behavior: 'instant'
+				});
+				if (tbodyScrollTop > 0 && this.easy_table_instance?.store?.tbody) {
+					this.easy_table_instance.store.tbody.scrollTop = tbodyScrollTop;
+				}
+				$tableMount.css('min-height', '');
+			};
+
+			requestAnimationFrame(() => {
+				doRestore();
+				setTimeout(doRestore, 60);
+			});
+		};
 
 		frappe.call({
 			method: 'ui_component.ui_component.page.customer_portal_insp.api.get_customer_portal_data',
@@ -284,7 +374,7 @@ let customer_portal_insp = Class.extend({
 				user: this.current_user,
 				has_portal_user: this.current_has_user || 'Has User',
 				limit_start: this.next_start,
-				page_length: 50
+				page_length: this.page_length || 100
 			},
 			callback: (r) => {
 				this.is_loading_more = false;
@@ -319,7 +409,7 @@ let customer_portal_insp = Class.extend({
 					this.loaded_customer_count += newlyAddedCustomers;
 					this.total_portal_users += summary.total_portal_users || 0;
 					this.has_more = Boolean(summary.has_more);
-					this.next_start = summary.next_start || (this.next_start + 50);
+					this.next_start = summary.next_start || (this.next_start + (this.page_length || 100));
 
 					this.render_summary();
 
@@ -327,12 +417,16 @@ let customer_portal_insp = Class.extend({
 						this.render_table(this.all_records);
 					}
 
-					this.update_load_more_ui();
+					this.update_pagination_ui();
+					restoreScroll();
+				} else {
+					$tableMount.css('min-height', '');
 				}
 			},
 			error: () => {
 				this.is_loading_more = false;
 				$btn.prop('disabled', false).html(originalText);
+				$tableMount.css('min-height', '');
 				frappe.show_alert({
 					message: __('Failed to load more customers.'),
 					indicator: 'red'
@@ -341,14 +435,45 @@ let customer_portal_insp = Class.extend({
 		});
 	},
 
-	update_load_more_ui: function () {
-		const $wrapper = this.page.main.find('.portal-load-more-wrapper');
-		// Only show Load More if there are more customers and neither customer nor user filter is active
-		if (this.has_more && !this.current_customer && !this.current_user) {
-			$wrapper.show();
-		} else {
-			$wrapper.hide();
+	update_pagination_ui: function () {
+		const $bar = this.page.main.find('.portal-pagination-bar');
+		if (this.all_records.length === 0) {
+			$bar.hide();
+			return;
 		}
+
+		// Update active button in page size group
+		$bar.find('.btn-page-size').removeClass('active');
+		$bar.find(`.btn-page-size[data-size="${this.page_length}"]`).addClass('active');
+
+		// Calculate from and to
+		const total = this.total_customer_count || 0;
+		const from = total > 0 ? 1 : 0;
+		const to = Math.min(this.loaded_customer_count || 0, total);
+
+		// Format info text: Showing 1-100 of 9355 candidate records
+		const fromToStr = total > 0 ? `${from}-${to}` : '0';
+		$bar.find('.page-from-to').text(fromToStr);
+		$bar.find('.page-total').text(total);
+
+		// Handle Load More button & page size group
+		const $loadMoreBtn = $bar.find('.btn-load-more');
+		const $pageSizeGroup = $bar.find('.page-size-group');
+
+		if (this.current_customer || this.current_user) {
+			$loadMoreBtn.hide();
+			$pageSizeGroup.hide();
+		} else {
+			$pageSizeGroup.show();
+			$loadMoreBtn.show();
+			if (this.has_more) {
+				$loadMoreBtn.prop('disabled', false).text(__('Load More'));
+			} else {
+				$loadMoreBtn.prop('disabled', true).text(__('Load More'));
+			}
+		}
+
+		$bar.show();
 	},
 
 	render_summary: function () {
@@ -540,6 +665,16 @@ let customer_portal_insp = Class.extend({
 			};
 		});
 
+		// If EasyTable instance already exists, smoothly update the data without tearing down DOM
+		if (this.easy_table_instance && typeof this.easy_table_instance.setData === 'function') {
+			if (this.easy_table_instance.store) {
+				this.easy_table_instance.store.pageSize = this.page_length || 100;
+			}
+			this.easy_table_instance.setData(tableData);
+			return;
+		}
+
+		$tableMount.empty();
 		const tableMountEl = $tableMount[0];
 		this.easy_table_instance = new EasyTable({
 			parent: tableMountEl,
@@ -547,12 +682,21 @@ let customer_portal_insp = Class.extend({
 			data: tableData,
 			pagination: {
 				enabled: true,
-				pageSize: 50
+				pageSize: this.page_length || 100
 			}
 		});
 	},
 
 	render_empty: function (message) {
+		if (this.easy_table_instance && typeof this.easy_table_instance.destroy === 'function') {
+			try {
+				this.easy_table_instance.destroy();
+			} catch (e) {
+				console.warn(e);
+			}
+		}
+		this.easy_table_instance = null;
+
 		const $tableMount = this.page.main.find('.customer-portal-table-mount');
 		$tableMount.html(`
 			<div class="empty-state text-center text-muted">
@@ -560,9 +704,19 @@ let customer_portal_insp = Class.extend({
 				<div class="font-weight-bold">${message || __('No Customer Portal records found.')}</div>
 			</div>
 		`);
+		this.page.main.find('.portal-pagination-bar').hide();
 	},
 
 	clear_all: function () {
+		if (this.easy_table_instance && typeof this.easy_table_instance.destroy === 'function') {
+			try {
+				this.easy_table_instance.destroy();
+			} catch (e) {
+				console.warn(e);
+			}
+		}
+		this.easy_table_instance = null;
+
 		if (this.customer_control) {
 			this.customer_control.set_value('');
 			this.update_link_btn_visibility(this.customer_control);
@@ -578,6 +732,7 @@ let customer_portal_insp = Class.extend({
 		this.current_customer = null;
 		this.current_user = null;
 		this.current_has_user = 'Has User';
+		this.page_length = 100;
 
 		this.load_initial_data();
 	}

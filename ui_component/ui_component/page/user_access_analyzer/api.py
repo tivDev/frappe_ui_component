@@ -12,7 +12,7 @@ def get_user_access_analysis(
 	access_type=None,
 	access_status=None,
 	limit_start=0,
-	page_length=25,
+	page_length=100,
 ):
 	"""Analyzes effective access and permission distinctions (list visibility vs detail read vs write)
 
@@ -52,7 +52,7 @@ def get_user_access_analysis(
 		frappe.throw(_("Child Table {0} cannot be analyzed as independent documents.").format(doctype))
 
 	limit_start = max(0, cint(limit_start or 0))
-	page_length = min(100, max(1, cint(page_length or 25)))
+	page_length = min(2500, max(1, cint(page_length or 100)))
 
 	# 3. User baseline roles & DocType permissions
 	user_roles = frappe.permissions.get_roles(user)
@@ -102,10 +102,12 @@ def get_user_access_analysis(
 
 	# 4. Discover candidate documents
 	candidate_names = []
+	total_candidate_count = 0
 	if document_name and isinstance(document_name, str) and document_name.strip():
 		doc_name = document_name.strip()
 		if frappe.db.exists(doctype, doc_name):
 			candidate_names = [doc_name]
+			total_candidate_count = 1
 		else:
 			return {
 				"user": user,
@@ -116,10 +118,13 @@ def get_user_access_analysis(
 				"doctype": doctype,
 				"document_name": doc_name,
 				"summary": {
+					"total_candidate_count": 0,
 					"analyzed": 0,
 					"accessible": 0,
 					"inaccessible": 0,
 					"indeterminate": 0,
+					"has_more": False,
+					"next_start": 0,
 				},
 				"doctype_meta": {
 					"module": meta.module,
@@ -138,6 +143,7 @@ def get_user_access_analysis(
 				"message": _("Document {0} does not exist in {1}.").format(doc_name, doctype),
 			}
 	else:
+		total_candidate_count = frappe.db.count(doctype)
 		candidate_names = frappe.get_all(
 			doctype,
 			pluck="name",
@@ -156,10 +162,13 @@ def get_user_access_analysis(
 			"doctype": doctype,
 			"document_name": document_name,
 			"summary": {
+				"total_candidate_count": total_candidate_count,
 				"analyzed": 0,
 				"accessible": 0,
 				"inaccessible": 0,
 				"indeterminate": 0,
+				"has_more": False,
+				"next_start": limit_start,
 			},
 			"doctype_meta": {
 				"module": meta.module,
@@ -529,6 +538,9 @@ def get_user_access_analysis(
 				"access_details": diagnostic_text,
 			})
 
+	has_more = False if (document_name and isinstance(document_name, str) and document_name.strip()) else ((limit_start + len(candidate_names)) < total_candidate_count)
+	next_start = limit_start + len(candidate_names)
+
 	return {
 		"user": user,
 		"user_name": user_doc.full_name or user,
@@ -538,10 +550,13 @@ def get_user_access_analysis(
 		"doctype": doctype,
 		"document_name": document_name,
 		"summary": {
+			"total_candidate_count": total_candidate_count,
 			"analyzed": len(candidate_names),
 			"accessible": accessible_count,
 			"inaccessible": inaccessible_count,
 			"indeterminate": indeterminate_count,
+			"has_more": has_more,
+			"next_start": next_start,
 		},
 		"doctype_meta": {
 			"module": meta.module,
