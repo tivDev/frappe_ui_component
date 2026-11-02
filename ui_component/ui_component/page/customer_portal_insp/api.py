@@ -4,7 +4,7 @@ from frappe.utils import cint
 
 
 @frappe.whitelist()
-def get_customer_portal_data(customer=None, user=None, has_portal_user="Has User", limit_start=0, page_length=50):
+def get_customer_portal_data(customer=None, user=None, has_portal_user="Has User", limit_start=0, page_length=100):
 	"""Fetches Customer and associated Portal User records organized
 	hierarchically with indent: 0 (Customer) and indent: 1 (Portal User).
 	"""
@@ -15,7 +15,7 @@ def get_customer_portal_data(customer=None, user=None, has_portal_user="Has User
 		)
 
 	limit_start = max(0, cint(limit_start or 0))
-	page_length = min(200, max(1, cint(page_length or 50)))
+	page_length = min(2500, max(1, cint(page_length or 100)))
 
 	selected_customer = (customer.strip() if (customer and isinstance(customer, str) and customer.strip()) else None)
 	selected_user = (user.strip() if (user and isinstance(user, str) and user.strip()) else None)

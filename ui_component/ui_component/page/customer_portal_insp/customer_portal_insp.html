@@ -54,11 +54,24 @@
 		</div>
 	</div>
 
-	<!-- Load More Footer Container -->
-	<div class="portal-load-more-wrapper text-center mt-3" style="display: none;">
-		<button type="button" class="btn btn-default btn-sm btn-load-more">
-			<i class="fa fa-angle-double-down mr-1"></i> {{ __("Load More Customers (+50)") }}
-		</button>
+	<!-- Pagination Bar -->
+	<div class="portal-pagination-bar" style="display: none;">
+		<div class="pagination-left">
+			<span class="pagination-info">
+				{{ __("Showing") }} <strong class="page-from-to">1-100</strong> {{ __("of") }} <strong class="page-total">0</strong> {{ __("candidate records") }}
+			</span>
+		</div>
+		<div class="pagination-right">
+			<div class="btn-group page-size-group" role="group">
+				<button type="button" class="btn btn-default btn-sm btn-page-size" data-size="20">20</button>
+				<button type="button" class="btn btn-default btn-sm btn-page-size active" data-size="100">100</button>
+				<button type="button" class="btn btn-default btn-sm btn-page-size" data-size="500">500</button>
+				<button type="button" class="btn btn-default btn-sm btn-page-size" data-size="2500">2500</button>
+			</div>
+			<button type="button" class="btn btn-default btn-sm btn-load-more">
+				{{ __("Load More") }}
+			</button>
+		</div>
 	</div>
 </div>
 
