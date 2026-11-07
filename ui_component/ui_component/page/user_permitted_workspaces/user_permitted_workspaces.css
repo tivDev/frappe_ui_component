@@ -1,0 +1,107 @@
+.user-permitted-workspaces-container .awesomplete > [role=listbox],
+.workspaces-input-wrapper .awesomplete > [role=listbox],
+.awesomplete > [role=listbox] {
+	z-index: 12 !important;
+}
+
+.workspaces-input-wrapper {
+	position: relative !important;
+	width: 240px;
+}
+
+.workspaces-input-wrapper.user-wrapper {
+	width: 240px;
+}
+
+.workspaces-input-wrapper.workspace-wrapper {
+	width: 240px;
+}
+
+.workspaces-input-wrapper .frappe-control {
+	margin-bottom: 0 !important;
+	width: 100% !important;
+	max-width: 100% !important;
+	flex: none !important;
+	padding: 0 !important;
+}
+
+.workspaces-input-wrapper .form-group {
+	margin-bottom: 0 !important;
+	position: relative !important;
+}
+
+.workspaces-input-wrapper .control-input-wrapper,
+.workspaces-input-wrapper .control-input {
+	width: 100% !important;
+	position: relative !important;
+}
+
+.workspaces-input-wrapper .link-field {
+	position: relative !important;
+	width: 100% !important;
+	display: block !important;
+}
+
+.workspaces-input-wrapper .awesomplete {
+	position: relative !important;
+	width: 100% !important;
+	display: block !important;
+}
+
+.workspaces-input-wrapper input.input-with-feedback {
+	height: 32px !important;
+	width: 100% !important;
+	font-size: 13px !important;
+	font-weight: 500 !important;
+	border-radius: 6px !important;
+	border: 1px solid var(--border-color, #cbd5e1) !important;
+	background: var(--control-bg, #ffffff) !important;
+	box-shadow: none !important;
+	padding-right: 48px !important;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.workspaces-input-wrapper input.input-with-feedback:focus {
+	border-color: var(--primary-color, #2563eb) !important;
+	box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15) !important;
+	outline: none !important;
+}
+
+.workspaces-input-wrapper .link-btn {
+	position: absolute !important;
+	top: 50% !important;
+	right: 8px !important;
+	transform: translateY(-50%) !important;
+	display: none !important;
+	align-items: center !important;
+	gap: 4px !important;
+	background: transparent !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	border: none !important;
+	z-index: 3 !important;
+}
+
+.workspaces-input-wrapper .link-field.has-value .link-btn {
+	display: inline-flex !important;
+}
+
+.workspaces-input-wrapper .link-btn a {
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	padding: 2px !important;
+	color: var(--text-muted, #64748b) !important;
+	border-radius: 4px !important;
+	text-decoration: none !important;
+	line-height: 1 !important;
+	background: transparent !important;
+	border: none !important;
+	transition: color 0.15s ease, background-color 0.15s ease !important;
+	cursor: pointer !important;
+}
+
+.workspaces-input-wrapper .link-btn a:hover {
+	color: var(--text-color, #0f172a) !important;
+	background-color: rgba(0, 0, 0, 0.06) !important;
+}

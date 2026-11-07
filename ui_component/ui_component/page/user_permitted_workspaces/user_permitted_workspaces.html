@@ -1,0 +1,571 @@
+<div class="user-permitted-workspaces-container" id="userPermittedWorkspacesContainer">
+	<!-- Unified Card: Controls, Presets & Summary Badges -->
+	<div class="workspaces-card">
+		<!-- Top Row: Title, Description & Quick Presets -->
+		<div class="workspaces-top-row">
+			<div class="workspaces-top-title">
+				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1 text-primary">
+					<rect x="3" y="3" width="7" height="7"></rect>
+					<rect x="14" y="3" width="7" height="7"></rect>
+					<rect x="14" y="14" width="7" height="7"></rect>
+					<rect x="3" y="14" width="7" height="7"></rect>
+				</svg>
+				<span class="workspaces-title-text">{{ __("User Permitted Workspaces") }}</span>
+				<span class="workspaces-title-sub text-muted ml-2">| {{ __("Analyze desk workspace access and internal item permissions") }}</span>
+			</div>
+			<div class="workspaces-presets-group">
+				<span class="preset-label text-muted">{{ __("Filter:") }}</span>
+				<div class="preset-buttons">
+					<button type="button" class="btn btn-default btn-xs btn-preset active" data-preset="permitted">
+						<span class="preset-dot dot-permitted"></span> {{ __("Permitted") }}
+					</button>
+					<button type="button" class="btn btn-default btn-xs btn-preset" data-preset="denied">
+						<span class="preset-dot dot-denied"></span> {{ __("Denied") }}
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- Main Controls Row: User, Workspace Name, Show Details, Actions -->
+		<div class="workspaces-controls-row">
+			<div class="workspaces-inputs-group">
+				<div class="workspaces-input-wrapper user-wrapper">
+					<div id="userFieldMount"></div>
+				</div>
+				<div class="workspaces-input-wrapper workspace-wrapper">
+					<div id="workspaceFieldMount"></div>
+				</div>
+				<div class="details-field-wrapper">
+					<div id="showDetailsFieldMount"></div>
+				</div>
+			</div>
+
+			<div class="workspaces-actions-group">
+				<div class="search-input-wrapper">
+					<input type="text" class="form-control form-control-sm workspaces-search-input" placeholder="{{ __("Search results...") }}">
+					<i class="fa fa-search search-icon text-muted"></i>
+				</div>
+				<button type="button" class="btn btn-default btn-sm btn-refresh-workspaces" title="{{ __("Reload Data") }}">
+					<i class="fa fa-refresh mr-1"></i> {{ __("Refresh") }}
+				</button>
+				<button type="button" class="btn btn-default btn-sm btn-reset-filters" title="{{ __("Reset to Default Filters") }}">
+					<i class="fa fa-undo mr-1"></i> {{ __("Reset") }}
+				</button>
+			</div>
+		</div>
+
+		<!-- Summary Badges Row (Visible after data loads) -->
+		<div class="workspaces-summary-row" style="display: none;">
+			<div class="summary-left">
+				<div class="workspaces-meta-badges">
+					<!-- Dynamically injected badges -->
+				</div>
+			</div>
+			<div class="summary-right">
+				<div class="workspaces-legend">
+					<span class="legend-item"><span class="legend-dot dot-permitted"></span> {{ __("Permitted") }}</span>
+					<span class="legend-item"><span class="legend-dot dot-denied"></span> {{ __("Denied") }}</span>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Main Table Mount Area -->
+	<div class="workspaces-table-mount">
+		<div class="empty-state-no-filter text-center text-muted">
+			<div class="spinner-border spinner-border-sm text-primary mb-2" role="status"></div>
+			<div>{{ __("Loading workspace permissions...") }}</div>
+		</div>
+	</div>
+</div>
+
+<style>
+.user-permitted-workspaces-container {
+	padding-top: 4px;
+}
+
+.user-permitted-workspaces-container .awesomplete > [role=listbox] {
+	z-index: 12 !important;
+}
+
+/* Card */
+.workspaces-card {
+	background: var(--card-bg, #ffffff);
+	border: 1px solid var(--border-color, #e2e8f0);
+	border-radius: 8px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+	margin-bottom: 16px;
+	transition: all 0.2s ease;
+}
+
+/* Top Row */
+.workspaces-top-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 12px;
+	padding: 10px 18px;
+	border-bottom: 1px solid var(--border-color, #f1f5f9);
+	background: var(--bg-light-gray, #f8fafc);
+	border-top-left-radius: 8px;
+	border-top-right-radius: 8px;
+}
+
+.workspaces-top-title {
+	display: inline-flex;
+	align-items: center;
+	font-weight: 600;
+	font-size: 14px;
+	color: var(--text-color, #1e293b);
+}
+
+.workspaces-title-sub {
+	font-size: 12px;
+	font-weight: 400;
+}
+
+.workspaces-presets-group {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.workspaces-presets-group .preset-label {
+	font-size: 12px;
+	font-weight: 500;
+}
+
+.workspaces-presets-group .preset-buttons {
+	display: inline-flex;
+	gap: 6px;
+}
+
+.btn-preset {
+	border-radius: 4px;
+	font-size: 11.5px;
+	padding: 2px 8px;
+	font-weight: 500;
+	transition: all 0.15s ease;
+}
+
+.btn-preset.active {
+	background-color: var(--text-color, #0f172a) !important;
+	color: #ffffff !important;
+	border-color: var(--text-color, #0f172a) !important;
+}
+
+.btn-preset.active .preset-dot {
+	box-shadow: 0 0 0 1.5px #fff;
+}
+
+/* Controls Row */
+.workspaces-controls-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 16px;
+	padding: 12px 18px;
+}
+
+.workspaces-inputs-group {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	flex-wrap: wrap;
+	flex: 1;
+}
+
+.workspaces-input-wrapper {
+	position: relative;
+	width: 240px;
+}
+
+.workspaces-input-wrapper.user-wrapper {
+	width: 240px;
+}
+
+.workspaces-input-wrapper.workspace-wrapper {
+	width: 240px;
+}
+
+.details-field-wrapper {
+	display: inline-flex;
+	align-items: center;
+	padding-top: 0;
+	height: 32px;
+}
+
+.details-field-wrapper .frappe-control {
+	margin-bottom: 0 !important;
+	padding: 0 !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	width: auto !important;
+}
+
+.details-field-wrapper .form-group {
+	margin-bottom: 0 !important;
+}
+
+.details-field-wrapper .checkbox {
+	margin: 0 !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	line-height: 1 !important;
+}
+
+.details-field-wrapper .checkbox label {
+	margin: 0 !important;
+	font-size: 13px !important;
+	font-weight: 500 !important;
+	color: var(--text-color, #334155) !important;
+	cursor: pointer !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	gap: 6px !important;
+	user-select: none !important;
+	white-space: nowrap !important;
+}
+
+.details-field-wrapper .checkbox input[type="checkbox"] {
+	margin: 0 !important;
+	cursor: pointer !important;
+	width: 16px !important;
+	height: 16px !important;
+	min-width: 16px !important;
+	max-width: 16px !important;
+	padding: 0 !important;
+	box-shadow: none !important;
+	accent-color: var(--primary-color, #2563eb) !important;
+}
+
+.details-field-wrapper input.input-with-feedback {
+	padding: 0 !important;
+	width: 16px !important;
+	height: 16px !important;
+}
+
+.workspaces-input-wrapper .frappe-control {
+	margin-bottom: 0 !important;
+	width: 100% !important;
+	max-width: 100% !important;
+	flex: none !important;
+	padding: 0 !important;
+}
+
+.workspaces-input-wrapper .form-group {
+	margin-bottom: 0 !important;
+	position: relative !important;
+}
+
+.workspaces-input-wrapper .control-input-wrapper,
+.workspaces-input-wrapper .control-input {
+	width: 100% !important;
+	position: relative !important;
+}
+
+.workspaces-input-wrapper .link-field {
+	position: relative !important;
+	width: 100% !important;
+	display: block !important;
+}
+
+.workspaces-input-wrapper .awesomplete {
+	position: relative !important;
+	width: 100% !important;
+	display: block !important;
+}
+
+.workspaces-input-wrapper input.input-with-feedback {
+	height: 32px !important;
+	width: 100% !important;
+	font-size: 13px !important;
+	font-weight: 500 !important;
+	border-radius: 6px !important;
+	border: 1px solid var(--border-color, #cbd5e1) !important;
+	background: var(--control-bg, #ffffff) !important;
+	box-shadow: none !important;
+	padding-right: 48px !important;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.workspaces-input-wrapper input.input-with-feedback:focus {
+	border-color: var(--primary-color, #2563eb) !important;
+	box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15) !important;
+	outline: none !important;
+}
+
+.workspaces-input-wrapper .link-btn {
+	position: absolute !important;
+	top: 50% !important;
+	right: 8px !important;
+	transform: translateY(-50%) !important;
+	display: none !important;
+	align-items: center !important;
+	gap: 4px !important;
+	background: transparent !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	border: none !important;
+	z-index: 3 !important;
+}
+
+.workspaces-input-wrapper .link-field.has-value .link-btn {
+	display: inline-flex !important;
+}
+
+.workspaces-input-wrapper .link-btn a {
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	padding: 2px !important;
+	color: var(--text-muted, #64748b) !important;
+	border-radius: 4px !important;
+	text-decoration: none !important;
+	line-height: 1 !important;
+	background: transparent !important;
+	border: none !important;
+	transition: color 0.15s ease, background-color 0.15s ease !important;
+	cursor: pointer !important;
+}
+
+.workspaces-input-wrapper .link-btn a:hover {
+	color: var(--text-color, #0f172a) !important;
+	background-color: rgba(0, 0, 0, 0.06) !important;
+}
+
+.workspaces-actions-group {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.search-input-wrapper {
+	position: relative;
+	width: 180px;
+}
+
+.workspaces-search-input {
+	height: 30px;
+	font-size: 12px;
+	border-radius: 6px;
+	padding-left: 28px;
+}
+
+.search-input-wrapper .search-icon {
+	position: absolute;
+	left: 9px;
+	top: 50%;
+	transform: translateY(-50%);
+	font-size: 11px;
+	pointer-events: none;
+}
+
+/* Summary Badges Row */
+.workspaces-summary-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	gap: 12px;
+	padding: 10px 18px;
+	border-top: 1px solid var(--border-color, #f1f5f9);
+	background: var(--card-bg, #ffffff);
+	border-bottom-left-radius: 8px;
+	border-bottom-right-radius: 8px;
+}
+
+.workspaces-meta-badges {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.summary-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 3px 9px;
+	border-radius: 6px;
+	font-size: 12px;
+	font-weight: 500;
+	background: var(--bg-light-gray, #f1f5f9);
+	color: var(--text-color, #334155);
+	border: 1px solid var(--border-color, #e2e8f0);
+}
+
+.summary-badge strong {
+	font-weight: 700;
+}
+
+.summary-badge.badge-user {
+	background: #eff6ff;
+	color: #1d4ed8;
+	border-color: #bfdbfe;
+}
+
+.summary-badge.badge-permitted {
+	background: #ecfdf5;
+	color: #047857;
+	border-color: #a7f3d0;
+}
+
+.summary-badge.badge-denied {
+	background: #fef2f2;
+	color: #b91c1c;
+	border-color: #fecaca;
+}
+
+.summary-badge.badge-items {
+	background: #faf5ff;
+	color: #6b21a8;
+	border-color: #e9d5ff;
+}
+
+.workspaces-legend {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	font-size: 12px;
+	color: var(--text-muted, #64748b);
+}
+
+.legend-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+}
+
+.legend-dot, .preset-dot {
+	display: inline-block;
+	width: 8px;
+	height: 8px;
+	border-radius: 50%;
+}
+
+.dot-permitted {
+	background: #10b981;
+}
+
+.dot-denied {
+	background: #ef4444;
+}
+
+/* Status Badges */
+.status-pill {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 2px 8px;
+	border-radius: 12px;
+	font-size: 11px;
+	font-weight: 600;
+	line-height: 1.4;
+}
+
+.status-pill.status-permitted {
+	background: #d1fae5;
+	color: #065f46;
+	border: 1px solid #a7f3d0;
+}
+
+.status-pill.status-denied {
+	background: #fee2e2;
+	color: #991b1b;
+	border: 1px solid #fecaca;
+}
+
+.status-pill.status-partial {
+	background: #fef3c7;
+	color: #92400e;
+	border: 1px solid #fde68a;
+}
+
+.type-pill {
+	display: inline-flex;
+	align-items: center;
+	padding: 1px 7px;
+	border-radius: 4px;
+	font-size: 11px;
+	font-weight: 500;
+	background: #f1f5f9;
+	color: #475569;
+	border: 1px solid #cbd5e1;
+}
+
+/* Table styling */
+.workspaces-fallback-table-wrapper {
+	background: var(--card-bg, #ffffff);
+	border: 1px solid var(--border-color, #e2e8f0);
+	border-radius: 8px;
+	overflow: hidden;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.workspaces-fallback-table {
+	margin-bottom: 0;
+	width: 100%;
+}
+
+.workspaces-fallback-table th {
+	background: var(--bg-light-gray, #f8fafc);
+	color: var(--text-muted, #64748b);
+	font-weight: 600;
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+	padding: 10px 14px;
+	border-bottom: 2px solid var(--border-color, #e2e8f0);
+	vertical-align: middle;
+}
+
+.workspaces-fallback-table td {
+	padding: 9px 14px;
+	font-size: 12.5px;
+	vertical-align: middle;
+	border-top: 1px solid var(--border-color, #f1f5f9);
+}
+
+.workspaces-fallback-table tbody tr:hover {
+	background-color: var(--bg-light-gray, #f8fafc);
+}
+
+.row-denied {
+	opacity: 0.85;
+}
+
+/* Progress bar inside table cell */
+.items-mini-progress {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.items-progress-bar-bg {
+	flex: 1;
+	height: 6px;
+	background: #e2e8f0;
+	border-radius: 3px;
+	overflow: hidden;
+	min-width: 40px;
+}
+
+.items-progress-bar-fill {
+	height: 100%;
+	background: #10b981;
+	border-radius: 3px;
+}
+
+/* Empty State */
+.workspaces-empty-state {
+	padding: 48px 20px;
+	background: var(--card-bg, #ffffff);
+	border: 1px dashed var(--border-color, #cbd5e1);
+	border-radius: 8px;
+	margin: 20px 0;
+}
+</style>
