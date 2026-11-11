@@ -1,4 +1,4 @@
-frappe.pages['user-permitted-workspaces'].on_page_load = function (wrapper) {
+(frappe.pages['user_permitted_workspaces'] || frappe.pages['user-permitted-workspaces']).on_page_load = function (wrapper) {
 	new user_permitted_workspaces(wrapper);
 };
 
