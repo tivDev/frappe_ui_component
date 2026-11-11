@@ -1,0 +1,19 @@
+{
+ "content": null,
+ "creation": "2026-11-11 08:12:21.722132",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2026-11-11 08:12:21.722132",
+ "modified_by": "Administrator",
+ "module": "UI Component",
+ "name": "doctype-revision-ins",
+ "owner": "Administrator",
+ "page_name": "doctype-revision-ins",
+ "roles": [],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 0,
+ "title": "DocType Revision Inspector"
+}
