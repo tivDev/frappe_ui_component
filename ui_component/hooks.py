@@ -33,7 +33,6 @@ app_include_css = [
 
 app_include_js = [
     "ui_component.bundle.ts",
-    "/assets/ui_component/js/fnd_bod_custom.js"
 ]
 
 # include js, css files in header of web template
