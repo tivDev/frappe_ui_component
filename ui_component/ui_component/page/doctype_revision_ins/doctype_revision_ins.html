@@ -1,0 +1,74 @@
+<div class="doctype-revision-container">
+	<!-- Unified Card: Controls, Filters & Summary -->
+	<div class="revision-card">
+		<!-- Top Row: Title & Info -->
+		<div class="revision-top-row">
+			<div class="revision-top-title">
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1">
+					<circle cx="18" cy="18" r="3"></circle>
+					<circle cx="6" cy="6" r="3"></circle>
+					<path d="M6 21V9a9 9 0 0 0 9 9"></path>
+				</svg>
+				<span class="revision-title-text">{{ __("DocType Revision Inspector") }}</span>
+			</div>
+			<div class="revision-note text-muted">
+				<i class="fa fa-info-circle mr-1 text-primary"></i>
+				{{ __("Only DocTypes with is_active / custom_is_active and revised_from / custom_revised_from fields are queried.") }}
+			</div>
+		</div>
+
+		<!-- Main Controls Row -->
+		<div class="revision-controls-row">
+			<div class="revision-inputs-group">
+				<div class="revision-input-wrapper doctype-wrapper">
+					<!-- DocType Link Control -->
+				</div>
+				<div class="revision-input-wrapper docname-wrapper">
+					<!-- Document Name Dynamic Link Control -->
+				</div>
+				<div class="revision-input-wrapper option-wrapper">
+					<!-- Status Option Select Control (All / Active / Inactive) -->
+				</div>
+			</div>
+			<div class="revision-actions-group">
+				<button type="button" class="btn btn-default btn-sm btn-expand-all" title="{{ __("Expand All Revision Nodes") }}" style="display: none;">
+					<i class="fa fa-expand mr-1"></i> {{ __("Expand All") }}
+				</button>
+				<button type="button" class="btn btn-default btn-sm btn-collapse-all" title="{{ __("Collapse All Revision Nodes") }}" style="display: none;">
+					<i class="fa fa-compress mr-1"></i> {{ __("Collapse All") }}
+				</button>
+				<button type="button" class="btn btn-default btn-sm btn-reset" title="{{ __("Clear Filters") }}">
+					<i class="fa fa-undo mr-1"></i> {{ __("Reset") }}
+				</button>
+			</div>
+		</div>
+
+		<!-- Summary Badges Row -->
+		<div class="revision-summary-row" style="display: none;">
+			<div class="revision-meta-badges">
+				<!-- Injected dynamically via JS -->
+			</div>
+			<div class="revision-legend">
+				<span class="legend-item"><span class="legend-dot dot-active"></span> {{ __("Active") }}</span>
+				<span class="legend-item"><span class="legend-dot dot-inactive"></span> {{ __("Inactive") }}</span>
+			</div>
+		</div>
+	</div>
+
+	<!-- Main Table Mount Area -->
+	<div class="doctype-revision-table-mount">
+		<div class="revision-empty-prompt text-center text-muted">
+			<div class="empty-icon-wrapper mb-3">
+				<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-muted" style="opacity: 0.5;">
+					<circle cx="18" cy="18" r="3"></circle>
+					<circle cx="6" cy="6" r="3"></circle>
+					<path d="M6 21V9a9 9 0 0 0 9 9"></path>
+				</svg>
+			</div>
+			<h5 class="text-dark font-weight-bold mb-1">{{ __("Select a DocType to Inspect Revisions") }}</h5>
+			<p class="text-muted font-size-sm mb-0">
+				{{ __("Choose a revision-enabled DocType above to explore its collapsible revision tree, optionally narrow by Document Name, or filter by Active/Inactive status.") }}
+			</p>
+		</div>
+	</div>
+</div>
